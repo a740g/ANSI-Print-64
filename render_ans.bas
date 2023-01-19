@@ -3,17 +3,7 @@
 ' https://en.wikipedia.org/wiki/ANSI_escape_code
 ' https://en.wikipedia.org/wiki/ANSI.SYS
 
-' Replace with Common.bi once prototyping is done
-$NoPrefix
-DefLng A-Z
-Option Explicit
-Option ExplicitArray
-Option Base 1
-'$Static
-$Resize:Smooth
-Const FALSE = 0, TRUE = Not FALSE
-Const NULL = 0
-Const NULLSTRING = ""
+'$Include:'Common.bi'
 
 Const ERROR_FEATURE_UNAVAILABLE = 73
 
