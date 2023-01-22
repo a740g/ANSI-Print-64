@@ -153,8 +153,10 @@ $If COMMON_BI = UNDEFINED Then
     Const KEY_SEMICOLON = 59
     Const KEY_COLON = 58
     ' QB64 errors that we can throw if something bad happens
-    Const ERROR_INVALID_HANDLE = 258
+    Const ERROR_CANNOT_CONTINUE = 17
+    Const ERROR_INTERNAL_ERROR = 51
     Const ERROR_FEATURE_UNAVAILABLE = 73
+    Const ERROR_INVALID_HANDLE = 258
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------

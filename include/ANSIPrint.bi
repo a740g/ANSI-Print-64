@@ -5,6 +5,8 @@
 ' https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 ' https://en.wikipedia.org/wiki/ANSI_escape_code
 ' https://en.wikipedia.org/wiki/ANSI.SYS
+' http://www.roysac.com/learn/ansisys.html
+' https://www.acid.org/info/sauce/sauce.htm
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -19,24 +21,24 @@ $If ANSIPRINT_BI = UNDEFINED Then
     ' CONSTANTS
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     ' ANSI constants (not an exhaustive list; only ones that matter to us)
-    Const ANSI_BEL = 7 ' Terminal bell
-    Const ANSI_BS = 8 ' Backspace
-    Const ANSI_HT = 9 ' Horizontal TAB
-    Const ANSI_LF = 10 ' Linefeed (newline)
-    Const ANSI_VT = 11 ' Vertical TAB
-    Const ANSI_FF = 12 ' Formfeed (also: New page NP)
-    Const ANSI_CR = 13 ' Carriage return
-    Const ANSI_SUB = 26 ' End of file (Control-Z)
-    Const ANSI_ESC = 27 ' Escape character
-    Const ANSI_SP = 32 ' Space character
-    Const ANSI_SLASH = 47 ' Slash character
-    Const ANSI_0 = 48 ' Zero character
-    Const ANSI_9 = 57 ' Nine character
-    Const ANSI_SEMICOLON = 59 ' Semicolon character
-    Const ANSI_QUESTION_MARK = 63 ' Question mark character
-    Const ANSI_AT_SIGN = 64 ' At sign character
-    Const ANSI_TILDE = 126 ' Tilde character
-    Const ANSI_DEL = 127 ' Delete character
+    Const ANSI_BEL = 7 ' terminal bell
+    Const ANSI_BS = 8 ' backspace
+    Const ANSI_HT = 9 ' horizontal TAB
+    Const ANSI_LF = 10 ' linefeed (newline)
+    Const ANSI_VT = 11 ' vertical TAB
+    Const ANSI_FF = 12 ' formfeed (also: New page NP)
+    Const ANSI_CR = 13 ' carriage return
+    Const ANSI_SUB = 26 ' end of file (Control-Z)
+    Const ANSI_ESC = 27 ' escape
+    Const ANSI_SP = 32 ' space
+    Const ANSI_SLASH = 47 ' /
+    Const ANSI_0 = 48 ' 0
+    Const ANSI_9 = 57 ' 9
+    Const ANSI_SEMICOLON = 59 ' ;
+    Const ANSI_QUESTION_MARK = 63 ' ?
+    Const ANSI_AT_SIGN = 64 ' @
+    Const ANSI_TILDE = 126 ' ~
+    Const ANSI_DEL = 127 ' delete
     ' ANSI escape sequence types
     Const ANSI_ESC_SS2 = 78 ' Single Shift Two
     Const ANSI_ESC_SS3 = 79 ' Single Shift Three
@@ -69,6 +71,11 @@ $If ANSIPRINT_BI = UNDEFINED Then
     Const ANSI_ESC_CSI_DSR = 110 ' Device status report
     Const ANSI_ESC_CSI_SCP = 115 ' Save Current Cursor Position
     Const ANSI_ESC_CSI_RCP = 117 ' Restore Saved Cursor Position
+    ' Parser state
+    Const ANSI_STATE_TEXT = 0 ' when parsing regular text & control characters
+    Const ANSI_STATE_BEGIN = 1 ' when beginning an escape sequence
+    Const ANSI_STATE_SEQUENCE = 2 ' when parsing a control sequence introducer
+    Const ANSI_STATE_END = 3 ' when the end of the character stream has been reached
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
