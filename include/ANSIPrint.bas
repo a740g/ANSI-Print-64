@@ -24,7 +24,10 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     ' Small test code for debugging the library
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     $Debug
-    Screen NewImage(640, 640, 12)
+    'Screen 0: Width , 50: Font 16
+    'Screen NewImage(1280, 800, 12)
+    'Screen NewImage(1280, 800, 256)
+    Screen NewImage(8 * 80, 800, 32)
 
     Do
         Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans", "ANSI Files")
@@ -50,10 +53,12 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long colorTable(0 To 7) ' the VGA to ANSI color LUT
         Dim As Long state ' the current parser state
         Dim As Long i, ch ' the current character index and the character
-        Dim sCSIArg(1 To 5) As String, nCSIArg(1 To 5) As Long ' CSI argument list (string and numeric)
-        Dim As Long nCSIArgIndex ' the current CSI argument index; 0 means no arguments
-        Dim As Long isBold ' flag that is set when "bold" font is required; this is translated to iCE colors
-        Dim As Long x ' a temp variable used in many places (usually as a counter)
+        ReDim arg(1 To ANSI_ARG_COUNT) As Long ' CSI argument list
+        Dim As Long argIndex ' the current CSI argument index; 0 means no arguments
+        Dim As Long leadInPrefix ' the type of lead-in prefix that was specified; this can help diffrentiate what the argument will be used for
+        Dim As Long isBold ' flag that is set when "bold" font is required; this enables iCE colors
+        Dim As Long isReverse ' flag that is set when reverse video is required
+        Dim As Long x, y ' temp variables used in many places (usually as counters / index)
         ' The variables below are used to save various things that are restored before the function exits
         Dim As Long oldControlChr, oldCursorX, oldCursorY, oldPrintMode, oldBlink
         Dim As Unsigned Long oldForegroundColor, oldBackgroundColor
@@ -75,7 +80,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
         ' Now we are free to change whatever we saved above
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
-        Locate , 1, 1 ' reset cursor to the left of the screen. TODO: How do we check if the cursor is visible? Currently enabled by default for debugging
+        Locate , 1, 0 ' reset cursor to the left of the screen. TODO: How do we check if the cursor is visible? Currently enabled by default for debugging
         Color 15, 0 ' reset the foreground and background color
         PrintMode FillBackground ' set the print mode to fill the character background
         Blink Off
@@ -91,22 +96,22 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                         Case ANSI_SUB ' stop processing and exit loop on EOF (usually put by SAUCE blocks)
                             state = ANSI_STATE_END
 
-                        Case ANSI_BEL ' Handle Bell - because QB64 does not (even with ControlChr On)
+                        Case ANSI_BEL ' handle Bell - because QB64 does not (even with ControlChr On)
                             Beep
 
-                        Case ANSI_BS ' Handle Backspace - because QB64 does not (even with ControlChr On)
+                        Case ANSI_BS ' handle Backspace - because QB64 does not (even with ControlChr On)
                             x = Pos(0) ' save old x pos
                             If x > 1 Then Locate , x - 1 ' move to the left only if we are not on the edge
 
-                        Case ANSI_LF ' Handle Line Feed because QB64 screws this up - moves the cursor to the beginning of the next line
+                        Case ANSI_LF ' handle Line Feed because QB64 screws this up - moves the cursor to the beginning of the next line
                             x = Pos(0) ' save old x pos
                             Print Chr$(ch); ' use QB64 to handle the LF and then correct the mistake
                             Locate , x ' set the cursor to the old x pos
 
-                        Case ANSI_FF ' Handle Form Feed - because QB64 does not (even with ControlChr On)
+                        Case ANSI_FF ' handle Form Feed - because QB64 does not (even with ControlChr On)
                             Locate 1, 1
 
-                        Case ANSI_CR ' Handle Carriage Return because QB64 screws this up - moves the cursor to the beginning of the next line
+                        Case ANSI_CR ' handle Carriage Return because QB64 screws this up - moves the cursor to the beginning of the next line
                             Locate , 1
 
                             'Case ANSI_DEL ' TODO: Check what to do with this
@@ -114,7 +119,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                         Case ANSI_ESC ' handle escape character
                             state = ANSI_STATE_BEGIN ' beginning a new escape sequence
 
-                        Case Else
+                        Case Else ' print the character
                             Print Chr$(ch);
 
                     End Select
@@ -128,10 +133,9 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                             state = ANSI_STATE_TEXT
 
                         Case ANSI_ESC_CSI ' handle CSI
-                            nCSIArgIndex = 0 ' Reset argument index
-                            For x = LBound(sCSIArg) To UBound(sCSIArg)
-                                sCSIArg(x) = NULLSTRING ' reset the control sequence arguments
-                            Next
+                            ReDim arg(1 To ANSI_ARG_COUNT) As Long ' reset the control sequence arguments
+                            argIndex = 0 ' reset argument index
+                            leadInPrefix = 0 ' reset lead-in prefix
                             state = ANSI_STATE_SEQUENCE
 
                         Case Else ' throw an error for stuff we are not handling
@@ -142,17 +146,17 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                 Case ANSI_STATE_SEQUENCE ' handle ESC sequence
                     Select Case ch
                         Case ANSI_0 To ANSI_QUESTION_MARK ' argument bytes
-                            If nCSIArgIndex < 1 Then nCSIArgIndex = 1 ' set the argument index to one if this is the first time
+                            If argIndex < 1 Then argIndex = 1 ' set the argument index to one if this is the first time
 
                             Select Case ch
                                 Case ANSI_0 To ANSI_9 ' handle sequence numeric arguments
-                                    sCSIArg(nCSIArgIndex) = sCSIArg(nCSIArgIndex) + Chr$(ch)
+                                    arg(argIndex) = arg(argIndex) * 10 + ch - ANSI_0
 
                                 Case ANSI_SEMICOLON ' handle sequence argument seperators
-                                    nCSIArgIndex = nCSIArgIndex + 1 ' increment the argument index
+                                    argIndex = argIndex + 1 ' increment the argument index
 
                                 Case ANSI_EQUALS_SIGN, ANSI_GREATER_THAN_SIGN, ANSI_QUESTION_MARK ' handle lead-in prefix
-                                    ' NOP
+                                    leadInPrefix = ch ' just save the prefix type
 
                                 Case Else ' throw an error for stuff we are not handling
                                     Error ERROR_FEATURE_UNAVAILABLE
@@ -172,10 +176,9 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                         Case ANSI_AT_SIGN To ANSI_TILDE ' final byte
                             Select Case ch
                                 Case ANSI_ESC_CSI_SM, ANSI_ESC_CSI_RM ' Set and reset screen mode
-                                    Select Case nCSIArgIndex
+                                    Select Case argIndex
                                         Case 1
-                                            nCSIArg(1) = Val(sCSIArg(1))
-                                            Select Case nCSIArg(1)
+                                            Select Case arg(1)
                                                 Case 0, 1 ' 40 x 148 x 25 monochrome (text) & 40 x 148 x 25 color (text)
                                                     Screen 0
                                                     Width 40, 25
@@ -191,10 +194,11 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                     Screen 2
 
                                                 Case 7 ' Enable / disable line wrapping
-                                                    ' TODO
-                                                    'If ANSI_ESC_CSI_SM = ch Then
-                                                    'Else
-                                                    'End If
+                                                    If ANSI_ESC_CSI_SM = ch Then ' ANSI_ESC_CSI_SM enable line wrapping
+                                                        ' NOP: QB64 does line wrapping by default
+                                                    Else ' ANSI_ESC_CSI_RM disable line wrapping unsupported
+                                                        Error ERROR_FEATURE_UNAVAILABLE
+                                                    End If
 
                                                 Case 13 ' 320 x 148 x 200 color (16-color graphics)
                                                     Screen 7
@@ -217,6 +221,13 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 Case 19 ' 320 x 148 x 200 color (256-color graphics)
                                                     Screen 13
 
+                                                Case 25 ' make cursor visible / invisible
+                                                    If ANSI_ESC_CSI_SM = ch Then ' ANSI_ESC_CSI_SM make cursor visible
+                                                        Locate , , 1
+                                                    Else ' ANSI_ESC_CSI_RM make cursor invisible
+                                                        Locate , , 0
+                                                    End If
+
                                                 Case Else ' throw an error for stuff we are not handling
                                                     Error ERROR_FEATURE_UNAVAILABLE
 
@@ -228,12 +239,11 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     End Select
 
                                 Case ANSI_ESC_CSI_ED ' Erase in Display
-                                    Select Case nCSIArgIndex
+                                    Select Case argIndex
                                         Case 1
-                                            nCSIArg(1) = Val(sCSIArg(1))
-                                            Select Case nCSIArg(1)
+                                            Select Case arg(1)
                                                 Case 2 ' erase entire screen
-                                                    Cls
+                                                    Cls ' this will also position the cursor to 1, 1
 
                                                 Case Else ' throw an error for stuff we are not handling
                                                     Error ERROR_FEATURE_UNAVAILABLE
@@ -246,166 +256,138 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     End Select
 
                                 Case ANSI_ESC_CSI_SGR ' Select Graphic Rendition
-                                    ' Handle stuff based on the number of arguments that we collected
-                                    Select Case nCSIArgIndex
-                                        Case 3 ' 3 arguments
-                                            nCSIArg(1) = Val(sCSIArg(1))
-                                            nCSIArg(2) = Val(sCSIArg(2))
-                                            nCSIArg(3) = Val(sCSIArg(3))
+                                    x = 1 ' start with the first argument
+                                    Do While x <= argIndex ' loop through the argument list and process each argument
+                                        Select Case arg(x)
+                                            Case 0 ' reset all modes (styles and colors)
+                                                Color 15, 0
+                                                isBold = FALSE
+                                                isReverse = FALSE
 
-                                            ' Set styles
-                                            Select Case nCSIArg(1)
-                                                Case 1
-                                                    isBold = TRUE
+                                            Case 1 ' enable high intensity colors
+                                                isBold = TRUE
 
-                                                Case 22
-                                                    isBold = FALSE
+                                            Case 2 ' enable low intensity
+                                                isBold = FALSE
 
-                                                Case Is >= 30
-                                                    Error ERROR_FEATURE_UNAVAILABLE
-                                            End Select
+                                            Case 5, 6 ' turn blinking on
+                                                Blink On
 
-                                            Select Case nCSIArg(2)
-                                                Case 39 ' default forground color
-                                                    Color 15
+                                            Case 7 ' enable reverse video
+                                                isReverse = TRUE
 
-                                                Case 30 To 37 ' foreground colors
-                                                    Color colorTable(nCSIArg(2) - 30)
-                                                    If isBold Then Color DefaultColor + 8
+                                            Case 22 ' disable high intensity colors
+                                                isBold = FALSE
 
-                                                Case 90 To 97 ' bright foreground colors
-                                                    Color colorTable(nCSIArg(2) - 82)
-                                            End Select
+                                            Case 25 ' turn blinking off
+                                                Blink Off
 
-                                            Select Case nCSIArg(3)
-                                                Case 49 ' default background color
-                                                    Color , 0
+                                            Case 27 ' disable reverse video
+                                                isReverse = FALSE
 
-                                                Case 40 To 47 ' background colors
-                                                    Color , colorTable(nCSIArg(3) - 40)
-                                                    If isBold Then Color , BackgroundColor + 8
+                                            Case 30 To 37 ' set foreground color
+                                                y = colorTable(arg(x) - 30)
+                                                If isBold Then y = y + 8
+                                                SetColor y, isReverse
 
-                                                Case 100 To 107 ' bright background colors
-                                                    Color , colorTable(nCSIArg(3) - 92)
-                                            End Select
+                                            Case 38 ' set 8-bit 256 or 24-bit RGB foreground color
+                                                Error ERROR_FEATURE_UNAVAILABLE
 
-                                        Case 2 ' 2 arguments
-                                            nCSIArg(1) = Val(sCSIArg(1))
-                                            nCSIArg(2) = Val(sCSIArg(2))
+                                            Case 39 ' set default foreground color
+                                                SetColor 15, isReverse
 
-                                            ' Set styles
-                                            Select Case nCSIArg(1)
-                                                Case 1
-                                                    isBold = TRUE
+                                            Case 40 To 47 ' set background color
+                                                y = colorTable(arg(x) - 40)
+                                                If isBold Then y = y + 8
+                                                SetColor y, Not isReverse
 
-                                                Case 22
-                                                    isBold = FALSE
+                                            Case 48 ' set 8-bit 256 or 24-bit RGB background color
+                                                Error ERROR_FEATURE_UNAVAILABLE
 
-                                                Case 39 ' default forground color
-                                                    Color 15
+                                            Case 49 ' set default background color
+                                                SetColor 0, Not isReverse
 
-                                                Case 49 ' default background color
-                                                    Color , 0
+                                            Case 90 To 97 ' set high intensity foreground color
+                                                SetColor colorTable(arg(x) - 90) + 8, isReverse
 
-                                                Case 40 To 47 ' handle regular backgrounds
-                                                    Color , colorTable(nCSIArg(1) - 40)
-                                                    If isBold Then Color , BackgroundColor + 8
+                                            Case 100 To 107 ' set high intensity background color
+                                                SetColor colorTable(arg(x) - 100) + 8, Not isReverse
 
-                                                Case 30 To 37 ' handle regular foreground
-                                                    Color colorTable(nCSIArg(1) - 30)
-                                                    If isBold Then Color DefaultColor + 8
+                                            Case Else ' throw an error for stuff we are not handling
+                                                Error ERROR_FEATURE_UNAVAILABLE
 
-                                                Case 90 To 97 ' bright foreground colors
-                                                    Color colorTable(nCSIArg(2) - 82)
+                                        End Select
 
-                                                Case 100 To 107 ' bright background colors
-                                                    Color , colorTable(nCSIArg(2) - 92)
-                                            End Select
+                                        x = x + 1 ' move to the next argument
+                                    Loop
 
-                                            Select Case nCSIArg(2)
-                                                Case 39 ' default forground color
-                                                    Color 15
+                                Case ANSI_ESC_CSI_PABLODRAW_24BPP ' PabloDraw 24-bit ANSI sequences
+                                    If 4 = argIndex Then ' we need 4 arguments
+                                        If Not arg(1) Then ' foreground
+                                            SetColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), isReverse
+                                        Else ' background
+                                            SetColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), Not isReverse
+                                        End If
 
-                                                Case 30 To 37 ' foreground colors
-                                                    Color colorTable(nCSIArg(2) - 30)
-                                                    If isBold Then Color DefaultColor + 8
+                                    Else ' malformed sequence
+                                        Error ERROR_CANNOT_CONTINUE
 
-                                                Case 90 To 97 ' bright foreground colors
-                                                    Color colorTable(nCSIArg(2) - 82)
-
-                                                Case 49 ' default background color
-                                                    Color , 0
-
-                                                Case 40 To 47 ' background colors
-                                                    Color , colorTable(nCSIArg(2) - 40)
-                                                    If isBold Then Color , BackgroundColor + 8
-
-                                                Case 100 To 107 ' bright background colors
-                                                    Color , colorTable(nCSIArg(2) - 92)
-                                            End Select
-
-                                        Case 1 ' 1 argument
-                                            nCSIArg(1) = Val(sCSIArg(1))
-
-                                            Select Case nCSIArg(1)
-                                                Case 0 ' reset all modes (styles and colors)
-                                                    Color 15, 0
-                                                    isBold = FALSE
-
-                                                Case 39 ' default forground color
-                                                    Color 15
-
-                                                Case 30 To 37 ' foreground colors
-                                                    Color colorTable(nCSIArg(1) - 30)
-
-                                                Case 90 To 97 ' bright foreground colors
-                                                    Color colorTable(nCSIArg(1) - 82)
-
-                                                Case 49 ' default background color
-                                                    Color , 0
-
-                                                Case 40 To 47 ' background colors
-                                                    Color , colorTable(nCSIArg(1) - 40)
-
-                                                Case 100 To 107 ' bright background colors
-                                                    Color , colorTable(nCSIArg(1) - 92)
-                                            End Select
-
-                                        Case Else ' this should never happen
-                                            Error ERROR_CANNOT_CONTINUE
-
-                                    End Select
-
-                                Case ANSI_ESC_CSI_CUP ' Cursor position
-                                    If Len(sCSIArg(1)) > 0 Then ' check if we need to move to a specific location
-                                        Locate 1 + Val(sCSIArg(1)), 1 + Val(sCSIArg(2)) ' line #, column #
-                                    Else ' put the cursor to 1,1
-                                        Locate 1, 1
                                     End If
 
-                                Case ANSI_ESC_CSI_HVP ' Horizontal and vertical position
-                                    Locate 1 + Val(sCSIArg(1)), 1 + Val(sCSIArg(2)) ' line #, column #
+                                Case ANSI_ESC_CSI_CUP, ANSI_ESC_CSI_HVP ' Cursor position or Horizontal and vertical position
+                                    x = TextScreenWidth
+                                    If arg(1) < 1 Then
+                                        arg(1) = 1
+                                    ElseIf arg(1) > x Then
+                                        arg(1) = x
+                                    End If
+                                    y = TextScreenHeight
+                                    If arg(2) < 1 Then
+                                        arg(2) = 1
+                                    ElseIf arg(2) > y Then
+                                        arg(2) = y
+                                    End If
+                                    Locate arg(1), arg(2) ' line #, column #
 
                                 Case ANSI_ESC_CSI_CUU ' Cursor up
-                                    Locate CsrLin - Val(sCSIArg(1))
+                                    If arg(1) < 1 Then arg(1) = 1
+                                    y = CsrLin - arg(1)
+                                    If y > 0 Then Locate y
 
                                 Case ANSI_ESC_CSI_CUD ' Cursor down
-                                    Locate CsrLin + Val(sCSIArg(1))
+                                    If arg(1) < 1 Then arg(1) = 1
+                                    y = CsrLin + arg(1)
+                                    If y <= TextScreenHeight Then Locate y
 
                                 Case ANSI_ESC_CSI_CUF ' Cursor forward
-                                    Locate , Pos(0) + Val(sCSIArg(1))
+                                    If arg(1) < 1 Then arg(1) = 1
+                                    x = Pos(0) + arg(1)
+                                    If x <= TextScreenWidth Then Locate , x
 
                                 Case ANSI_ESC_CSI_CUB ' Cursor back
-                                    Locate , Pos(0) - Val(sCSIArg(1))
+                                    If arg(1) < 1 Then arg(1) = 1
+                                    x = Pos(0) - arg(1)
+                                    If x > 0 Then Locate , x
 
                                 Case ANSI_ESC_CSI_CNL ' Cursor Next Line
-                                    Locate CsrLin + Val(sCSIArg(1)), 1
+                                    If arg(1) < 1 Then arg(1) = 1
+                                    y = CsrLin + arg(1)
+                                    If y <= TextScreenHeight Then Locate y, 1
 
                                 Case ANSI_ESC_CSI_CPL ' Cursor Previous Line
-                                    Locate CsrLin - Val(sCSIArg(1)), 1
+                                    If arg(1) < 1 Then arg(1) = 1
+                                    y = CsrLin - arg(1)
+                                    If y > 0 Then Locate y, 1
 
                                 Case ANSI_ESC_CSI_CHA ' Cursor Horizontal Absolute
-                                    Locate , 1 + Val(sCSIArg(1))
+                                    x = TextScreenWidth
+                                    If arg(1) < 1 Then
+                                        arg(1) = 1
+                                    ElseIf arg(1) > x Then
+                                        arg(1) = x
+                                    End If
+                                    Locate , arg(1)
+
 
                                 Case Else ' throw an error for stuff we are not handling
                                     Error ERROR_FEATURE_UNAVAILABLE
@@ -459,6 +441,49 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ColorTableData:
         Data 0,4,2,6,1,5,3,7
     End Sub
+
+
+    ' This works around the QB screen 0 blinking and high intensity background nonsense
+    ' c is the color (0 to 15) for paletted destination or 32-bit RGB for true color destinations
+    ' isBackGround can be set to true when setting the background color
+    Sub SetColor (c As Unsigned Long, isBackground As Long)
+        If PixelSize = 0 Then ' text mode
+            If isBackground Then
+                If c < 8 Then
+                    Color DefaultColor Mod 16, c Mod 8
+                Else
+                    Color 16 + DefaultColor Mod 16, c Mod 8
+                End If
+            Else
+                Color c
+
+            End If
+
+        Else ' graphics mode
+            If isBackground Then Color , c Else Color c
+
+        End If
+    End Sub
+
+
+    ' Returns the number of characters per line
+    Function TextScreenWidth&
+        If PixelSize = 0 Then
+            TextScreenWidth = Width
+        Else
+            TextScreenWidth = Width \ FontWidth ' this will cause a divide by zero if a variable width font is used; use fixed width fonts instead
+        End If
+    End Function
+
+
+    ' Returns the number of lines
+    Function TextScreenHeight&
+        If PixelSize = 0 Then
+            TextScreenHeight = Height
+        Else
+            TextScreenHeight = Height \ FontHeight
+        End If
+    End Function
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------

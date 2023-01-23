@@ -96,6 +96,7 @@ $If ANSIPRINT_BI = UNDEFINED Then
     Const ANSI_ESC_CSI_SGR = 109 ' Select Graphic Rendition
     Const ANSI_ESC_CSI_DSR = 110 ' Device status report
     Const ANSI_ESC_CSI_SCP = 115 ' Save Current Cursor Position
+    Const ANSI_ESC_CSI_PABLODRAW_24BPP = 116 ' PabloDraw 24-bit ANSI sequences
     Const ANSI_ESC_CSI_RCP = 117 ' Restore Saved Cursor Position
     Const ANSI_TILDE = 126 ' ~
     Const ANSI_DEL = 127 ' Delete
@@ -104,6 +105,8 @@ $If ANSIPRINT_BI = UNDEFINED Then
     Const ANSI_STATE_BEGIN = 1 ' when beginning an escape sequence
     Const ANSI_STATE_SEQUENCE = 2 ' when parsing a control sequence introducer
     Const ANSI_STATE_END = 3 ' when the end of the character stream has been reached
+    ' Parser limits
+    Const ANSI_ARG_COUNT = 10 ' max number of arguments that we can parse at a time
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
