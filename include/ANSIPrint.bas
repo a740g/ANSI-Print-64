@@ -2,10 +2,13 @@
 ' QB64-PE ANSI emulator
 ' Copyright (c) 2023 Samuel Gomes
 '
+' Bibliography:
 ' https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 ' https://en.wikipedia.org/wiki/ANSI_escape_code
 ' https://en.wikipedia.org/wiki/ANSI.SYS
 ' http://www.roysac.com/learn/ansisys.html
+' https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+' https://talyian.github.io/ansicolors/
 ' https://www.acid.org/info/sauce/sauce.htm
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -44,8 +47,14 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     ' sANSI - the ANSI stream to render
     ' nCPS - characters / second (bigger numbers means faster; -ve number to disable)
     Sub PrintANSI (sANSI As String, nCPS As Long)
-        Dim As Long state, nCSIArg(1 To 4), i, ch, nCSIArgIndex, colorTable(0 To 7), isBold, x
-        Dim sCSIArg(1 To 4) As String
+        Dim As Long colorTable(0 To 7) ' the VGA to ANSI color LUT
+        Dim As Long state ' the current parser state
+        Dim As Long i, ch ' the current character index and the character
+        Dim sCSIArg(1 To 5) As String, nCSIArg(1 To 5) As Long ' CSI argument list (string and numeric)
+        Dim As Long nCSIArgIndex ' the current CSI argument index; 0 means no arguments
+        Dim As Long isBold ' flag that is set when "bold" font is required; this is translated to iCE colors
+        Dim As Long x ' a temp variable used in many places (usually as a counter)
+        ' The variables below are used to save various things that are restored before the function exits
         Dim As Long oldControlChr, oldCursorX, oldCursorY, oldPrintMode, oldBlink
         Dim As Unsigned Long oldForegroundColor, oldBackgroundColor
 
@@ -66,7 +75,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
         ' Now we are free to change whatever we saved above
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
-        Locate , 1 ', 1 ' reset cursor to the left of the screen. TODO: How do we check if the cursor is visible?
+        Locate , 1, 1 ' reset cursor to the left of the screen. TODO: How do we check if the cursor is visible? Currently enabled by default for debugging
         Color 15, 0 ' reset the foreground and background color
         PrintMode FillBackground ' set the print mode to fill the character background
         Blink Off
