@@ -41,7 +41,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     ' FUNCTIONS & SUBROUTINES
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
-    ' sStr - the ANSI stream to render
+    ' sANSI - the ANSI stream to render
     ' nCPS - characters / second (bigger numbers means faster; -ve number to disable)
     Sub PrintANSI (sANSI As String, nCPS As Long)
         Dim As Long state, nCSIArg(1 To 4), i, ch, nCSIArgIndex, colorTable(0 To 7), isBold, x
@@ -89,17 +89,16 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                             x = Pos(0) ' save old x pos
                             If x > 1 Then Locate , x - 1 ' move to the left only if we are not on the edge
 
-                            'Case ANSI_LF ' Handle Line Feed because QB64 screws this up - moves the cursor to the beginning of the next line
-                            '    x = Pos(0) ' save old x pos
-                            '    Print Chr$(ch); ' use QB64 to handle the LF and then correct the mistake
-                            '    Locate , x ' set the cursor to the old x pos
+                        Case ANSI_LF ' Handle Line Feed because QB64 screws this up - moves the cursor to the beginning of the next line
+                            x = Pos(0) ' save old x pos
+                            Print Chr$(ch); ' use QB64 to handle the LF and then correct the mistake
+                            Locate , x ' set the cursor to the old x pos
 
                         Case ANSI_FF ' Handle Form Feed - because QB64 does not (even with ControlChr On)
                             Locate 1, 1
 
                         Case ANSI_CR ' Handle Carriage Return because QB64 screws this up - moves the cursor to the beginning of the next line
-                            ' NOP
-                            'Locate , 1
+                            Locate , 1
 
                             'Case ANSI_DEL ' TODO: Check what to do with this
 
@@ -134,24 +133,108 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                 Case ANSI_STATE_SEQUENCE ' handle ESC sequence
                     Select Case ch
                         Case ANSI_0 To ANSI_QUESTION_MARK ' argument bytes
-                            If nCSIArgIndex < 1 Then nCSIArgIndex = 1
+                            If nCSIArgIndex < 1 Then nCSIArgIndex = 1 ' set the argument index to one if this is the first time
 
                             Select Case ch
-                                Case ANSI_0 To ANSI_9 ' Handle Sequence numeric arguments
+                                Case ANSI_0 To ANSI_9 ' handle sequence numeric arguments
                                     sCSIArg(nCSIArgIndex) = sCSIArg(nCSIArgIndex) + Chr$(ch)
 
-                                Case ANSI_SEMICOLON ' Handle Sequence argument seperators
-                                    nCSIArgIndex = nCSIArgIndex + 1
+                                Case ANSI_SEMICOLON ' handle sequence argument seperators
+                                    nCSIArgIndex = nCSIArgIndex + 1 ' increment the argument index
+
+                                Case ANSI_EQUALS_SIGN, ANSI_GREATER_THAN_SIGN, ANSI_QUESTION_MARK ' handle lead-in prefix
+                                    ' NOP
+
+                                Case Else ' throw an error for stuff we are not handling
+                                    Error ERROR_FEATURE_UNAVAILABLE
+
                             End Select
 
                         Case ANSI_SP To ANSI_SLASH ' intermediate bytes
-                            'Select Case ch
-                            'End Select
+                            Select Case ch
+                                Case ANSI_SP ' ignore spaces
+                                    ' NOP
+
+                                Case Else ' throw an error for stuff we are not handling
+                                    Error ERROR_FEATURE_UNAVAILABLE
+
+                            End Select
 
                         Case ANSI_AT_SIGN To ANSI_TILDE ' final byte
                             Select Case ch
-                                Case ANSI_ESC_CSI_SM ' Set screen mode
-                                    Error ERROR_FEATURE_UNAVAILABLE
+                                Case ANSI_ESC_CSI_SM, ANSI_ESC_CSI_RM ' Set and reset screen mode
+                                    Select Case nCSIArgIndex
+                                        Case 1
+                                            nCSIArg(1) = Val(sCSIArg(1))
+                                            Select Case nCSIArg(1)
+                                                Case 0, 1 ' 40 x 148 x 25 monochrome (text) & 40 x 148 x 25 color (text)
+                                                    Screen 0
+                                                    Width 40, 25
+
+                                                Case 2, 3 ' 40 x 148 x 25 monochrome (text) & 40 x 148 x 25 color (text)
+                                                    Screen 0
+                                                    Width 80, 25
+
+                                                Case 4, 5 ' 320 x 148 x 200 4-color (graphics) & 320 x 148 x 200 monochrome (graphics)
+                                                    Screen 1
+
+                                                Case 6 ' 640 x 148 x 200 monochrome (graphics)
+                                                    Screen 2
+
+                                                Case 7 ' Enable / disable line wrapping
+                                                    ' TODO
+                                                    'If ANSI_ESC_CSI_SM = ch Then
+                                                    'Else
+                                                    'End If
+
+                                                Case 13 ' 320 x 148 x 200 color (16-color graphics)
+                                                    Screen 7
+
+                                                Case 14 ' 640 x 148 x 200 color (16-color graphics)
+                                                    Screen 8
+
+                                                Case 15 ' 640 x 148 x 350 monochrome (2-color graphics)
+                                                    Screen 10
+
+                                                Case 16 ' 640 x 148 x 350 color (16-color graphics)
+                                                    Screen 9
+
+                                                Case 17 ' 640 x 148 x 480 monochrome (2-color graphics)
+                                                    Screen 11
+
+                                                Case 18 ' 640 x 148 x 480 color (16-color graphics)
+                                                    Screen 12
+
+                                                Case 19 ' 320 x 148 x 200 color (256-color graphics)
+                                                    Screen 13
+
+                                                Case Else ' throw an error for stuff we are not handling
+                                                    Error ERROR_FEATURE_UNAVAILABLE
+
+                                            End Select
+
+                                        Case Else ' this should never happen
+                                            Error ERROR_CANNOT_CONTINUE
+
+                                    End Select
+
+                                Case ANSI_ESC_CSI_ED ' Erase in Display
+                                    Select Case nCSIArgIndex
+                                        Case 1
+                                            nCSIArg(1) = Val(sCSIArg(1))
+                                            Select Case nCSIArg(1)
+                                                Case 2 ' erase entire screen
+                                                    Cls
+
+                                                Case Else ' throw an error for stuff we are not handling
+                                                    Error ERROR_FEATURE_UNAVAILABLE
+
+                                            End Select
+
+                                        Case Else ' this should never happen
+                                            Error ERROR_CANNOT_CONTINUE
+
+                                    End Select
 
                                 Case ANSI_ESC_CSI_SGR ' Select Graphic Rendition
                                     ' Handle stuff based on the number of arguments that we collected
@@ -279,8 +362,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                     Color , colorTable(nCSIArg(1) - 92)
                                             End Select
 
-                                        Case Else
-                                            Error ERROR_CANNOT_CONTINUE ' this should never happen
+                                        Case Else ' this should never happen
+                                            Error ERROR_CANNOT_CONTINUE
 
                                     End Select
 
@@ -315,7 +398,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                 Case ANSI_ESC_CSI_CHA ' Cursor Horizontal Absolute
                                     Locate , 1 + Val(sCSIArg(1))
 
-                                Case Else
+                                Case Else ' throw an error for stuff we are not handling
                                     Error ERROR_FEATURE_UNAVAILABLE
 
                             End Select
