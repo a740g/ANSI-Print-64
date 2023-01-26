@@ -107,6 +107,11 @@ $If ANSIPRINT_BI = UNDEFINED Then
     Const ANSI_STATE_END = 3 ' when the end of the character stream has been reached
     ' Parser limits
     Const ANSI_ARG_COUNT = 10 ' max number of arguments that we can parse at a time
+    ' Some defaults
+    Const ANSI_DEFAULT_COLOR_FOREGROUND = 7
+    Const ANSI_DEFAULT_COLOR_FOREGROUND32 = White
+    Const ANSI_DEFAULT_COLOR_BACKGROUND = 0
+    Const ANSI_DEFAULT_COLOR_BACKGROUND32 = Black
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------

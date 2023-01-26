@@ -24,10 +24,10 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     ' Small test code for debugging the library
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     $Debug
-    'Screen 0: Width , 50: Font 16
-    'Screen NewImage(1280, 800, 12)
-    'Screen NewImage(1280, 800, 256)
-    Screen NewImage(8 * 80, 800, 32)
+    Screen 0: Width , 50: Font 16
+    'Screen NewImage(8 * 80, 800, 12)
+    'Screen NewImage(8 * 80, 800, 256)
+    'Screen NewImage(8 * 80, 800, 32)
 
     Do
         Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans", "ANSI Files")
@@ -60,7 +60,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long isReverse ' flag that is set when reverse video is required
         Dim As Long x, y ' temp variables used in many places (usually as counters / index)
         ' The variables below are used to save various things that are restored before the function exits
-        Dim As Long oldControlChr, oldCursorX, oldCursorY, oldPrintMode, oldBlink
+        Dim As Long oldControlChr, oldCursorX, oldCursorY, oldPrintMode
         Dim As Unsigned Long oldForegroundColor, oldBackgroundColor
 
         ' Setup ANSI to VGA color table
@@ -76,14 +76,18 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         oldForegroundColor = DefaultColor
         oldBackgroundColor = BackgroundColor
         oldPrintMode = PrintMode
-        oldBlink = Blink
 
         ' Now we are free to change whatever we saved above
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
-        Locate , 1, 0 ' reset cursor to the left of the screen. TODO: How do we check if the cursor is visible? Currently enabled by default for debugging
-        Color 15, 0 ' reset the foreground and background color
+        Locate , 1, 0 ' reset cursor to the left of the screen
+        ' Reset the foreground and background color
+        If PixelSize < 4 Then
+            Color ANSI_DEFAULT_COLOR_FOREGROUND, ANSI_DEFAULT_COLOR_BACKGROUND
+        Else
+            Color ANSI_DEFAULT_COLOR_FOREGROUND32, ANSI_DEFAULT_COLOR_BACKGROUND32
+        End If
         PrintMode FillBackground ' set the print mode to fill the character background
-        Blink Off
+        Blink Off ' set blink to off since this is only supported in text mode and does not work with _DISPLAY anyway
 
         state = ANSI_STATE_TEXT ' we will start parsing regular text by default
 
@@ -179,19 +183,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Select Case argIndex
                                         Case 1
                                             Select Case arg(1)
-                                                Case 0, 1 ' 40 x 148 x 25 monochrome (text) & 40 x 148 x 25 color (text)
-                                                    Screen 0
-                                                    Width 40, 25
-
-                                                Case 2, 3 ' 40 x 148 x 25 monochrome (text) & 40 x 148 x 25 color (text)
-                                                    Screen 0
-                                                    Width 80, 25
-
-                                                Case 4, 5 ' 320 x 148 x 200 4-color (graphics) & 320 x 148 x 200 monochrome (graphics)
-                                                    Screen 1
-
-                                                Case 6 ' 640 x 148 x 200 monochrome (graphics)
-                                                    Screen 2
+                                                Case 0 To 6, 14 To 18 ' all mode changes are ignored. the screen type must be set by the caller
+                                                    ' NOP
 
                                                 Case 7 ' Enable / disable line wrapping
                                                     If ANSI_ESC_CSI_SM = ch Then ' ANSI_ESC_CSI_SM enable line wrapping
@@ -199,27 +192,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                     Else ' ANSI_ESC_CSI_RM disable line wrapping unsupported
                                                         Error ERROR_FEATURE_UNAVAILABLE
                                                     End If
-
-                                                Case 13 ' 320 x 148 x 200 color (16-color graphics)
-                                                    Screen 7
-
-                                                Case 14 ' 640 x 148 x 200 color (16-color graphics)
-                                                    Screen 8
-
-                                                Case 15 ' 640 x 148 x 350 monochrome (2-color graphics)
-                                                    Screen 10
-
-                                                Case 16 ' 640 x 148 x 350 color (16-color graphics)
-                                                    Screen 9
-
-                                                Case 17 ' 640 x 148 x 480 monochrome (2-color graphics)
-                                                    Screen 11
-
-                                                Case 18 ' 640 x 148 x 480 color (16-color graphics)
-                                                    Screen 12
-
-                                                Case 19 ' 320 x 148 x 200 color (256-color graphics)
-                                                    Screen 13
 
                                                 Case 25 ' make cursor visible / invisible
                                                     If ANSI_ESC_CSI_SM = ch Then ' ANSI_ESC_CSI_SM make cursor visible
@@ -260,7 +232,12 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Do While x <= argIndex ' loop through the argument list and process each argument
                                         Select Case arg(x)
                                             Case 0 ' reset all modes (styles and colors)
-                                                Color 15, 0
+                                                If PixelSize < 4 Then
+                                                    Color ANSI_DEFAULT_COLOR_FOREGROUND, ANSI_DEFAULT_COLOR_BACKGROUND
+                                                Else
+                                                    Color ANSI_DEFAULT_COLOR_FOREGROUND32, ANSI_DEFAULT_COLOR_BACKGROUND32
+                                                End If
+
                                                 isBold = FALSE
                                                 isReverse = FALSE
 
@@ -271,7 +248,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 isBold = FALSE
 
                                             Case 5, 6 ' turn blinking on
-                                                Blink On
+                                                isBold = TRUE
 
                                             Case 7 ' enable reverse video
                                                 isReverse = TRUE
@@ -280,7 +257,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 isBold = FALSE
 
                                             Case 25 ' turn blinking off
-                                                Blink Off
+                                                isBold = FALSE
 
                                             Case 27 ' disable reverse video
                                                 isReverse = FALSE
@@ -294,7 +271,11 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 Error ERROR_FEATURE_UNAVAILABLE
 
                                             Case 39 ' set default foreground color
-                                                SetColor 15, isReverse
+                                                If PixelSize < 4 Then
+                                                    SetColor ANSI_DEFAULT_COLOR_FOREGROUND, isReverse
+                                                Else
+                                                    SetColor ANSI_DEFAULT_COLOR_FOREGROUND32, isReverse
+                                                End If
 
                                             Case 40 To 47 ' set background color
                                                 y = colorTable(arg(x) - 40)
@@ -305,7 +286,11 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 Error ERROR_FEATURE_UNAVAILABLE
 
                                             Case 49 ' set default background color
-                                                SetColor 0, Not isReverse
+                                                If PixelSize < 4 Then
+                                                    SetColor ANSI_DEFAULT_COLOR_BACKGROUND, Not isReverse
+                                                Else
+                                                    SetColor ANSI_DEFAULT_COLOR_BACKGROUND32, Not isReverse
+                                                End If
 
                                             Case 90 To 97 ' set high intensity foreground color
                                                 SetColor colorTable(arg(x) - 90) + 8, isReverse
@@ -432,19 +417,13 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                 PrintMode FillBackground
         End Select
 
-        If oldBlink Then
-            Blink On
-        Else
-            Blink Off
-        End If
-
         ColorTableData:
         Data 0,4,2,6,1,5,3,7
     End Sub
 
 
-    ' This works around the QB screen 0 blinking and high intensity background nonsense
-    ' c is the color (0 to 15) for paletted destination or 32-bit RGB for true color destinations
+    ' This works around the QB SCREEN 0 high intensity background nonsense
+    ' c is the color (0 to 15) for paletted destinations or 32-bit RGB for true color destinations
     ' isBackGround can be set to true when setting the background color
     Sub SetColor (c As Unsigned Long, isBackground As Long)
         If PixelSize = 0 Then ' text mode
