@@ -27,7 +27,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     Screen NewImage(8 * 80, 800, 32)
 
     Do
-        Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans", "ANSI Files")
+        Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
         If Not FileExists(ansFile) Then Exit Do
 
         Dim fh As Long: fh = FreeFile
@@ -52,7 +52,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long state ' the current parser state
         Dim As Long i, ch ' the current character index and the character
         ReDim arg(1 To ANSI_ARG_COUNT) As Long ' CSI argument list
-        Dim As Long argIndex ' the current CSI argument index; 0 means no arguments
+        Dim As Long argIndex ' the current CSI argument index & count; 0 means no arguments
         Dim As Long leadInPrefix ' the type of lead-in prefix that was specified; this can help diffrentiate what the argument will be used for
         Dim As Long isBold, isBlink, isInvert ' text attributes
         Dim As Long x, y, z ' temp variables used in many places (usually as counters / index)
@@ -456,8 +456,10 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         End If
 
         If isBackground Then
+            ' Echo "Background color" + Str$(c) + " (" + Hex$(nRGB) + ")"
             Color , nRGB
         Else
+            ' Echo "Foreground color" + Str$(c) + " (" + Hex$(nRGB) + ")"
             Color nRGB
         End If
     End Sub
@@ -475,26 +477,26 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     End Function
 
 
-    ' Initializes the ANSI legacy LUT
+    ' Initializes the ANSI legacy color LUT
     Sub InitializeANSIColorLUT
         Shared ANSIColorLUT() As Unsigned Long
 
-        ' The first 16 are the standard 16 ANSI colors
+        ' The first 16 are the standard 16 ANSI colors (VGA style)
         ANSIColorLUT(0) = RGB32(0, 0, 0) '  0 black
-        ANSIColorLUT(1) = RGB32(128, 0, 0) '  1 red
-        ANSIColorLUT(2) = RGB32(0, 128, 0) '  2 green
-        ANSIColorLUT(3) = RGB32(128, 128, 0) '  3 yellow
-        ANSIColorLUT(4) = RGB32(0, 0, 128) '  4 blue
-        ANSIColorLUT(5) = RGB32(128, 0, 128) '  5 magenta
-        ANSIColorLUT(6) = RGB32(0, 128, 128) '  6 cyan
-        ANSIColorLUT(7) = RGB32(192, 192, 192) '  7 white (light grey)
-        ANSIColorLUT(8) = RGB32(128, 128, 128) '  8 grey
-        ANSIColorLUT(9) = RGB32(255, 0, 0) '  9 bright red
-        ANSIColorLUT(10) = RGB32(255, 255, 0) ' 10 bright green
-        ANSIColorLUT(11) = RGB32(0, 255, 0) ' 11 bright yellow
-        ANSIColorLUT(12) = RGB32(0, 0, 255) ' 12 bright blue
-        ANSIColorLUT(13) = RGB32(255, 0, 255) ' 13 bright magenta
-        ANSIColorLUT(14) = RGB32(0, 255, 255) ' 14 bright cyan
+        ANSIColorLUT(1) = RGB32(170, 0, 0) '  1 red
+        ANSIColorLUT(2) = RGB32(0, 170, 0) '  2 green
+        ANSIColorLUT(3) = RGB32(170, 85, 0) '  3 yellow (not really yellow; oh well)
+        ANSIColorLUT(4) = RGB32(0, 0, 170) '  4 blue
+        ANSIColorLUT(5) = RGB32(170, 0, 170) '  5 magenta
+        ANSIColorLUT(6) = RGB32(0, 170, 170) '  6 cyan
+        ANSIColorLUT(7) = RGB32(170, 170, 170) '  7 white (light grey)
+        ANSIColorLUT(8) = RGB32(85, 85, 85) '  8 grey
+        ANSIColorLUT(9) = RGB32(255, 85, 85) '  9 bright red
+        ANSIColorLUT(10) = RGB32(85, 255, 85) ' 10 bright green
+        ANSIColorLUT(11) = RGB32(255, 255, 85) ' 11 bright yellow
+        ANSIColorLUT(12) = RGB32(85, 85, 255) ' 12 bright blue
+        ANSIColorLUT(13) = RGB32(255, 85, 255) ' 13 bright magenta
+        ANSIColorLUT(14) = RGB32(85, 255, 255) ' 14 bright cyan
         ANSIColorLUT(15) = RGB32(255, 255, 255) ' 15 bright white
 
         Dim As Long c, i, r, g, b
