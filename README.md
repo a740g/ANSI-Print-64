@@ -45,8 +45,8 @@ Anything you want! Use it in games, demos or writing pretty text mode user inter
 ## Notes
 
 - This requires the latest version of [QB64-PE](https://github.com/QB64-Phoenix-Edition/QB64pe)
-- The renderer is designed for QB64's 32BPP graphics Window
-- This is WIP. So, expect things to change and break. There are some bugs and quicks that needs to be worked out
+- The renderer is designed for QB64's 32BPP graphics Window. Legacy `SCREEN`s will not work
+- This is WIP. So, expect things to change and break. There are some bugs and quirks that needs to be worked out
 
 ## Credits
 
