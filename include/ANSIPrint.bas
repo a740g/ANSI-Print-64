@@ -32,7 +32,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
     '    Dim fh As Long: fh = FreeFile
     '    Open ansFile For Binary Access Read As fh
-    '    PrintANSI Input$(LOF(fh), fh), 1000 ' put a -ve number here for superfast rendering
+    '    PrintANSI Input$(LOF(fh), fh), -1 ' put a -ve number here for superfast rendering
     '    Close fh
     '    Title "Press any key to open another file...": Sleep 3600
     '    Cls
@@ -82,7 +82,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ' Now we are free to change whatever we saved above
         PrintMode FillBackground ' set the print mode to fill the character background
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
-        Locate , 1, 0 ' reset cursor to the left of the screen
+        Locate , 1, 0 ' reset cursor to the left of the screen and turn off the cursor
         sX = Pos(0)
         sY = CsrLin
         ' Reset the foreground and background color
@@ -106,8 +106,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                             Beep
 
                         Case ANSI_BS ' handle Backspace - because QB64 does not (even with ControlChr On)
-                            x = Pos(0) ' save old x pos
-                            If x > 1 Then Locate , x - 1 ' move to the left only if we are not on the edge
+                            x = Pos(0) - 1
+                            If x > 0 Then Locate , x ' move to the left only if we are not on the edge
 
                         Case ANSI_LF ' handle Line Feed because QB64 screws this up - moves the cursor to the beginning of the next line
                             x = Pos(0) ' save old x pos
@@ -138,6 +138,20 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                             ControlChr On
                             state = ANSI_STATE_TEXT
 
+                        Case ANSI_ESC_DECSC ' Save Cursor Position in Memory
+                            sX = Pos(0)
+                            sY = CsrLin
+                            state = ANSI_STATE_TEXT
+
+                        Case ANSI_ESC_DECSR ' Restore Cursor Position from Memory
+                            Locate sY, sX
+                            state = ANSI_STATE_TEXT
+
+                        Case ANSI_ESC_RI ' Reverse Index
+                            y = CsrLin - 1
+                            If y > 0 Then Locate y
+                            state = ANSI_STATE_TEXT
+
                         Case ANSI_ESC_CSI ' handle CSI
                             ReDim arg(1 To ANSI_ARG_COUNT) As Long ' reset the control sequence arguments
                             argIndex = 0 ' reset argument index
@@ -149,7 +163,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
                     End Select
 
-                Case ANSI_STATE_SEQUENCE ' handle ESC sequence
+                Case ANSI_STATE_SEQUENCE ' handle CSI sequence
                     Select Case ch
                         Case ANSI_0 To ANSI_QUESTION_MARK ' argument bytes
                             If argIndex < 1 Then argIndex = 1 ' set the argument index to one if this is the first time
@@ -193,6 +207,9 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                     If ANSI_ESC_CSI_RM = ch Then ' ANSI_ESC_CSI_RM disable line wrapping unsupported
                                                         Error ERROR_FEATURE_UNAVAILABLE
                                                     End If
+
+                                                Case 12 ' Text Cursor Enable / Disable Blinking
+                                                    ' NOP
 
                                                 Case 25 ' make cursor visible / invisible
                                                     If ANSI_ESC_CSI_SM = ch Then ' ANSI_ESC_CSI_SM make cursor visible
@@ -318,11 +335,11 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                         x = x + 1 ' move to the next argument
                                     Loop
 
-                                Case ANSI_ESC_CSI_SCP ' Save Current Cursor Position
+                                Case ANSI_ESC_CSI_SCP ' ANSI.SYS: Save Current Cursor Position
                                     sX = Pos(0)
                                     sY = CsrLin
 
-                                Case ANSI_ESC_CSI_RCP ' Restore Saved Cursor Position
+                                Case ANSI_ESC_CSI_RCP ' ANSI.SYS: Restore Saved Cursor Position
                                     Locate sY, sX
 
                                 Case ANSI_ESC_CSI_PABLODRAW_24BPP ' PabloDraw 24-bit ANSI sequences
@@ -401,6 +418,15 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     End If
                                     Locate , arg(1)
 
+                                Case ANSI_ESC_CSI_VPA ' Vertical Line Position Absolute
+                                    y = TextCanvasHeight
+                                    If arg(1) < 1 Then
+                                        arg(1) = 1
+                                    ElseIf arg(1) > y Then
+                                        arg(1) = y
+                                    End If
+                                    Locate arg(1)
+
                                 Case Else ' throw an error for stuff we are not handling
                                     Error ERROR_FEATURE_UNAVAILABLE
 
@@ -417,8 +443,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                 Case ANSI_STATE_END ' exit loop if end state was set
                     Exit For
 
-                Case Else
-                    Error ERROR_CANNOT_CONTINUE ' this should never happen
+                Case Else ' this should never happen
+                    Error ERROR_CANNOT_CONTINUE
 
             End Select
 

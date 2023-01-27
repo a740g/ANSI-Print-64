@@ -9,11 +9,11 @@ This is an [ANSI Escape Sequence](https://en.wikipedia.org/wiki/ANSI_escape_code
 
 - No dependency on third party libraries - OK
 - No OS specific code - OK
-- Support all meaninful ANSI escape sequences - WIP
-- Support all meaninful [ANSI.SYS](https://en.wikipedia.org/wiki/ANSI.SYS) escape sequences - WIP
+- Support all meaninful [ANSI Escape Sequences](https://en.wikipedia.org/wiki/ANSI_escape_code) - WIP
+- Support all meaninful [ANSI.SYS Escape Sequences](https://en.wikipedia.org/wiki/ANSI.SYS) - WIP
 - Support all meaninful non-ANSI escape sequences (e.g. [PabloDraw](https://en.wikipedia.org/wiki/PabloDraw) 24bpp colors) - WIP
 - Support embedded [ANSI music](docs/ansimtech.txt) - WIP
-- Support animated ANSI content - WIP
+- Support [animated ANSI](http://www.roysac.com/ansianim.html) content - WIP
 - Support querying width and height of the content in characters - WIP
 - Easy plug-&-play API - WIP
 - Load and render all [ANS](https://en.wikipedia.org/wiki/ANSI_art), ASC, DIZ, NFO and TXT files in the repository correctly - WIP
@@ -30,9 +30,9 @@ Sub PrintANSI (sANSI As String, nCPS As Long)
 - [ANSI Escape Sequences](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797) by Christian Petersen
 - [ANSI escape code](https://en.wikipedia.org/wiki/ANSI_escape_code) from Wikipedia
 - [ANSI.SYS](https://en.wikipedia.org/wiki/ANSI.SYS) from Wikipedia
-- [ANSI.SYS Documentation and Reference](http://www.roysac.com/learn/ansisys.html) by Carsten Cumbrowski
-- [ANSI.SYS Documentation](docs/ANSI.sys.txt) by Microsoft
 - [Console Virtual Terminal Sequences](https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences) by Microsoft
+- [ANSI.SYS Documentation](https://learn.microsoft.com/en-us/previous-versions/tn-archive/cc722862(v=technet.10)) by Microsoft
+- [ANSI.SYS Documentation and Reference](http://www.roysac.com/learn/ansisys.html) by Carsten Cumbrowski
 - [ANSI Color Codes](https://talyian.github.io/ansicolors/) by Jimmy Tang
 - [SAUCE – Standard Architecture for Universal Comment Extensions](https://www.acid.org/info/sauce/sauce.htm) by Olivier "Tasmaniac" Reubens / ACiD
 - [ANSI Music](docs/ansimtech.txt) by unknown
