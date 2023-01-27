@@ -40,7 +40,7 @@ Sub PrintANSI (sANSI As String, nCPS As Long)
 
 ## What can I do with this?
 
-Anything you want! Use it in games, demos or writing pretty text mode user interface or output.
+Anything you want! Use it in games, demos or writing pretty text mode user interfaces and output.
 
 ## Notes
 
