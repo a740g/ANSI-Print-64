@@ -36,11 +36,11 @@ Sub PrintANSI (sANSI As String, nCPS As Long)
 - [ANSI Color Codes](https://talyian.github.io/ansicolors/) by Jimmy Tang
 - [SAUCE – Standard Architecture for Universal Comment Extensions](https://www.acid.org/info/sauce/sauce.htm) by Olivier "Tasmaniac" Reubens / ACiD
 - [ANSI Music](docs/ansimtech.txt) by unknown
-- Various resources and information from <https://16colo.rs/> and <https://int10h.org/>
+- Various resources and information from <https://16colo.rs/>, <http://www.roysac.com/> and <https://int10h.org/>
 
 ## What can I do with this?
 
-Anything you want! Use it in games, demos or writing pretty text mode user interfaces and output.
+Anything you want! Use it in games, demos or for writing pretty text mode user interfaces and output.
 
 ## Notes
 

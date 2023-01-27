@@ -251,6 +251,9 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 isBold = FALSE
                                                 SetColor fc, isInvert, TRUE
 
+                                            Case 3, 4, 23, 24 ' set / reset italic mode, set underline mode ignored
+                                                ' TODO: This can be used if we load monospaced TTF fonts using 'italics', 'underline' properties
+
                                             Case 5, 6 ' turn blinking on
                                                 If bc < 8 Then bc = bc + 8
                                                 isBlink = TRUE
