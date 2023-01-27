@@ -32,7 +32,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
     '    Dim fh As Long: fh = FreeFile
     '    Open ansFile For Binary Access Read As fh
-    '    PrintANSI Input$(LOF(fh), fh), -1 ' put a -ve number here for superfast rendering
+    '    PrintANSI Input$(LOF(fh), fh), 1000 ' put a -ve number here for superfast rendering
     '    Close fh
     '    Title "Press any key to open another file...": Sleep 3600
     '    Cls
@@ -339,17 +339,17 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     End If
 
                                 Case ANSI_ESC_CSI_CUP, ANSI_ESC_CSI_HVP ' Cursor position or Horizontal and vertical position
-                                    x = TextCanvasWidth
+                                    y = TextCanvasHeight
                                     If arg(1) < 1 Then
                                         arg(1) = 1
-                                    ElseIf arg(1) > x Then
-                                        arg(1) = x
+                                    ElseIf arg(1) > y Then
+                                        arg(1) = y
                                     End If
-                                    y = TextCanvasHeight
+                                    x = TextCanvasWidth
                                     If arg(2) < 1 Then
                                         arg(2) = 1
-                                    ElseIf arg(2) > y Then
-                                        arg(2) = y
+                                    ElseIf arg(2) > x Then
+                                        arg(2) = x
                                     End If
                                     Locate arg(1), arg(2) ' line #, column #
 
@@ -470,7 +470,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
     ' Returns the number of characters per line
     Function TextCanvasWidth&
-        TextCanvasWidth = Width \ FontWidth ' this will cause a divide by zero if a variable width font is used; use fixed width fonts instead
+        TextCanvasWidth = Width \ FontWidth ' this will cause a divide by zero if a variable width font is used; use monospaced fonts to avoid this
     End Function
 
 
