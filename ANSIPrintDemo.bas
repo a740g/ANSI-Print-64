@@ -12,10 +12,10 @@
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-Screen NewImage(1280, 800, 12)
+Screen NewImage(8 * 80, 800, 32)
 
 Do
-    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans", "ANSI Files")
+    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
     If Not FileExists(ansFile) Then Exit Do
 
     Dim fh As Long: fh = FreeFile

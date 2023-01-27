@@ -23,22 +23,22 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     ' Small test code for debugging the library
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
-    $Debug
-    Screen NewImage(8 * 80, 800, 32)
+    '$Debug
+    'Screen NewImage(8 * 80, 800, 32)
 
-    Do
-        Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
-        If Not FileExists(ansFile) Then Exit Do
+    'Do
+    '    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
+    '    If Not FileExists(ansFile) Then Exit Do
 
-        Dim fh As Long: fh = FreeFile
-        Open ansFile For Binary Access Read As fh
-        PrintANSI Input$(LOF(fh), fh), -1 ' put a -ve number here for superfast rendering
-        Close fh
-        Title "Press any key to open another file...": Sleep 3600
-        Cls
-    Loop
+    '    Dim fh As Long: fh = FreeFile
+    '    Open ansFile For Binary Access Read As fh
+    '    PrintANSI Input$(LOF(fh), fh), -1 ' put a -ve number here for superfast rendering
+    '    Close fh
+    '    Title "Press any key to open another file...": Sleep 3600
+    '    Cls
+    'Loop
 
-    End
+    'End
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
