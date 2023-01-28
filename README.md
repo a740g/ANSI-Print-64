@@ -11,7 +11,7 @@ This is an [ANSI Escape Sequence](https://en.wikipedia.org/wiki/ANSI_escape_code
 - No OS specific code - OK
 - Support all meaninful [ANSI Escape Sequences](https://en.wikipedia.org/wiki/ANSI_escape_code) - WIP
 - Support all meaninful [ANSI.SYS Escape Sequences](https://en.wikipedia.org/wiki/ANSI.SYS) - WIP
-- Support all meaninful non-ANSI escape sequences (e.g. [PabloDraw](https://en.wikipedia.org/wiki/PabloDraw) 24bpp colors) - WIP
+- Support all meaninful non-ANSI escape sequences (e.g. [PabloDraw](https://github.com/cwensley/pablodraw) 24bpp colors) - WIP
 - Support embedded [ANSI music](docs/ansimtech.txt) - WIP
 - Support [animated ANSI](http://www.roysac.com/ansianim.html) content - WIP
 - Support querying width and height of the content in characters - WIP

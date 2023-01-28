@@ -12,7 +12,8 @@
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-Screen NewImage(8 * 80, 800, 32)
+Screen NewImage(8 * 80, 16 * 60, 32)
+Font 8
 
 Do
     Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
@@ -20,7 +21,7 @@ Do
 
     Dim fh As Long: fh = FreeFile
     Open ansFile For Binary Access Read As fh
-    PrintANSI Input$(LOF(fh), fh), -1 ' put a -ve number here for superfast rendering
+    PrintANSI Input$(LOF(fh), fh), 6000 ' put a -ve number here for superfast rendering
     Close fh
     Title "Press any key to open another file...": Sleep 3600
     Cls

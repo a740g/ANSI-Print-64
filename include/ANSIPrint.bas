@@ -24,7 +24,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     ' Small test code for debugging the library
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     '$Debug
-    'Screen NewImage(8 * 80, 800, 32)
+    'Screen NewImage(8 * 80, 16 * 60, 32)
+    'Font 8
 
     'Do
     '    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
@@ -58,7 +59,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long x, y, z ' temp variables used in many places (usually as counters / index)
         Dim As Long fc, bc ' legacy foreground and background colors
         Dim As Long savedDECX, savedDECY ' DEC saved cursor position
-        Dim As Long savedASYSX, savedASYSY ' ANSI.SYS saved cursor position
+        Dim As Long savedSCOX, savedSCOY ' SCO saved cursor position
         ' The variables below are used to save various things that are restored before the function exits
         Dim As Long oldControlChr, oldPrintMode
         Dim As Unsigned Long oldForegroundColor, oldBackgroundColor
@@ -85,14 +86,14 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ' Save the current cursor position
         savedDECX = Pos(0)
         savedDECY = CsrLin
-        savedASYSX = savedDECX
-        savedASYSY = savedDECY
+        savedSCOX = savedDECX
+        savedSCOY = savedDECY
 
         ' Reset the foreground and background color
         fc = ANSI_DEFAULT_COLOR_FOREGROUND
-        SetColor fc, FALSE, TRUE
+        SetTextCanvasColor fc, FALSE, TRUE
         bc = ANSI_DEFAULT_COLOR_BACKGROUND
-        SetColor bc, TRUE, TRUE
+        SetTextCanvasColor bc, TRUE, TRUE
 
         state = ANSI_STATE_TEXT ' we will start parsing regular text by default
 
@@ -112,7 +113,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                             x = Pos(0) - 1
                             If x > 0 Then Locate , x ' move to the left only if we are not on the edge
 
-                        Case ANSI_LF ' handle Line Feed because QB64 screws this up - moves the cursor to the beginning of the next line
+                        Case ANSI_LF ' handle Line Feed because QB64 screws this up and moves the cursor to the beginning of the next line
                             x = Pos(0) ' save old x pos
                             Print Chr$(ch); ' use QB64 to handle the LF and then correct the mistake
                             Locate , x ' set the cursor to the old x pos
@@ -120,7 +121,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                         Case ANSI_FF ' handle Form Feed - because QB64 does not (even with ControlChr On)
                             Locate 1, 1
 
-                        Case ANSI_CR ' handle Carriage Return because QB64 screws this up - moves the cursor to the beginning of the next line
+                        Case ANSI_CR ' handle Carriage Return because QB64 screws this up and moves the cursor to the beginning of the next line
                             Locate , 1
 
                             'Case ANSI_DEL ' TODO: Check what to do with this
@@ -233,10 +234,44 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
                                 Case ANSI_ESC_CSI_ED ' Erase in Display
                                     Select Case argIndex
-                                        Case 1
+                                        Case 0, 1
                                             Select Case arg(1)
-                                                Case 2 ' erase entire screen
-                                                    Cls ' this will also position the cursor to 1, 1
+                                                Case 0 ' clear from cursor to end of screen
+                                                    ClearTextCanvasArea Pos(0), CsrLin, TextCanvasWidth, CsrLin ' first clear till the end of the line starting from the cursor
+                                                    ClearTextCanvasArea 1, CsrLin + 1, TextCanvasWidth, TextCanvasHeight ' next clear the whole canvas below the cursor
+
+                                                Case 1 ' clear from cursor to beginning of the screen
+                                                    ClearTextCanvasArea 1, CsrLin, Pos(0), CsrLin ' first clear from the beginning of the line till the cursor
+                                                    ClearTextCanvasArea 1, 1, TextCanvasWidth, CsrLin - 1 ' next clear the whole canvas above the cursor
+
+                                                Case 2 ' clear entire screen (and moves cursor to upper left like ANSI.SYS)
+                                                    Cls
+
+                                                Case 3 ' clear entire screen and delete all lines saved in the scrollback buffer (scrollback stuff not supported)
+                                                    ClearTextCanvasArea 1, 1, TextCanvasWidth, TextCanvasHeight
+
+                                                Case Else ' throw an error for stuff we are not handling
+                                                    Error ERROR_FEATURE_UNAVAILABLE
+
+                                            End Select
+
+                                        Case Else ' this should never happen
+                                            Error ERROR_CANNOT_CONTINUE
+
+                                    End Select
+
+                                Case ANSI_ESC_CSI_EL ' Erase in Line
+                                    Select Case argIndex
+                                        Case 0, 1
+                                            Select Case arg(1)
+                                                Case 0 ' erase from cursor to end of line
+                                                    ClearTextCanvasArea Pos(0), CsrLin, TextCanvasWidth, CsrLin
+
+                                                Case 1 ' erase start of line to the cursor
+                                                    ClearTextCanvasArea 1, CsrLin, Pos(0), CsrLin
+
+                                                Case 2 ' erase the entire line
+                                                    ClearTextCanvasArea 1, CsrLin, TextCanvasWidth, CsrLin
 
                                                 Case Else ' throw an error for stuff we are not handling
                                                     Error ERROR_FEATURE_UNAVAILABLE
@@ -258,18 +293,18 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 isBold = FALSE
                                                 isBlink = FALSE
                                                 isInvert = FALSE
-                                                SetColor fc, isInvert, TRUE
-                                                SetColor bc, Not isInvert, TRUE
+                                                SetTextCanvasColor fc, isInvert, TRUE
+                                                SetTextCanvasColor bc, Not isInvert, TRUE
 
                                             Case 1 ' enable high intensity colors
                                                 If fc < 8 Then fc = fc + 8
                                                 isBold = TRUE
-                                                SetColor fc, isInvert, TRUE
+                                                SetTextCanvasColor fc, isInvert, TRUE
 
                                             Case 2, 22 ' enable low intensity, disable high intensity colors
                                                 If fc > 7 Then fc = fc - 8
                                                 isBold = FALSE
-                                                SetColor fc, isInvert, TRUE
+                                                SetTextCanvasColor fc, isInvert, TRUE
 
                                             Case 3, 4, 23, 24 ' set / reset italic mode, set underline mode ignored
                                                 ' TODO: This can be used if we load monospaced TTF fonts using 'italics', 'underline' properties
@@ -277,58 +312,58 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                             Case 5, 6 ' turn blinking on
                                                 If bc < 8 Then bc = bc + 8
                                                 isBlink = TRUE
-                                                SetColor bc, Not isInvert, TRUE
+                                                SetTextCanvasColor bc, Not isInvert, TRUE
 
                                             Case 7 ' enable reverse video
                                                 If Not isInvert Then
                                                     isInvert = TRUE
-                                                    SetColor fc, isInvert, TRUE
-                                                    SetColor bc, Not isInvert, TRUE
+                                                    SetTextCanvasColor fc, isInvert, TRUE
+                                                    SetTextCanvasColor bc, Not isInvert, TRUE
                                                 End If
 
                                             Case 25 ' turn blinking off
                                                 If bc > 7 Then bc = bc - 8
                                                 isBlink = FALSE
-                                                SetColor bc, Not isInvert, TRUE
+                                                SetTextCanvasColor bc, Not isInvert, TRUE
 
                                             Case 27 ' disable reverse video
                                                 If isInvert Then
                                                     isInvert = FALSE
-                                                    SetColor fc, isInvert, TRUE
-                                                    SetColor bc, Not isInvert, TRUE
+                                                    SetTextCanvasColor fc, isInvert, TRUE
+                                                    SetTextCanvasColor bc, Not isInvert, TRUE
                                                 End If
 
                                             Case 30 To 37 ' set foreground color
                                                 fc = arg(x) - 30
                                                 If isBold Then fc = fc + 8
-                                                SetColor fc, isInvert, TRUE
+                                                SetTextCanvasColor fc, isInvert, TRUE
 
                                             Case 38 ' set 8-bit 256 or 24-bit RGB foreground color
                                                 Error ERROR_FEATURE_UNAVAILABLE
 
                                             Case 39 ' set default foreground color
                                                 fc = ANSI_DEFAULT_COLOR_FOREGROUND
-                                                SetColor fc, isInvert, TRUE
+                                                SetTextCanvasColor fc, isInvert, TRUE
 
                                             Case 40 To 47 ' set background color
                                                 bc = arg(x) - 40
                                                 If isBlink Then bc = bc + 8
-                                                SetColor bc, Not isInvert, TRUE
+                                                SetTextCanvasColor bc, Not isInvert, TRUE
 
                                             Case 48 ' set 8-bit 256 or 24-bit RGB background color
                                                 Error ERROR_FEATURE_UNAVAILABLE
 
                                             Case 49 ' set default background color
                                                 bc = ANSI_DEFAULT_COLOR_BACKGROUND
-                                                SetColor bc, Not isInvert, TRUE
+                                                SetTextCanvasColor bc, Not isInvert, TRUE
 
                                             Case 90 To 97 ' set high intensity foreground color
                                                 fc = 8 + arg(x) - 90
-                                                SetColor fc, isInvert, TRUE
+                                                SetTextCanvasColor fc, isInvert, TRUE
 
                                             Case 100 To 107 ' set high intensity background color
                                                 bc = 8 + arg(x) - 100
-                                                SetColor bc, Not isInvert, TRUE
+                                                SetTextCanvasColor bc, Not isInvert, TRUE
 
                                             Case Else ' throw an error for stuff we are not handling
                                                 Error ERROR_FEATURE_UNAVAILABLE
@@ -338,19 +373,19 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                         x = x + 1 ' move to the next argument
                                     Loop
 
-                                Case ANSI_ESC_CSI_SCP ' ANSI.SYS: Save Current Cursor Position
-                                    savedASYSX = Pos(0)
-                                    savedASYSY = CsrLin
+                                Case ANSI_ESC_CSI_SCP ' Save Current Cursor Position (SCO)
+                                    savedSCOX = Pos(0)
+                                    savedSCOY = CsrLin
 
-                                Case ANSI_ESC_CSI_RCP ' ANSI.SYS: Restore Saved Cursor Position
-                                    Locate savedASYSY, savedASYSX
+                                Case ANSI_ESC_CSI_RCP ' Restore Saved Cursor Position (SCO)
+                                    Locate savedSCOY, savedSCOX
 
                                 Case ANSI_ESC_CSI_PABLODRAW_24BPP ' PabloDraw 24-bit ANSI sequences
                                     If 4 = argIndex Then ' we need 4 arguments
                                         If Not arg(1) Then ' foreground
-                                            SetColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), FALSE, FALSE
+                                            SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), FALSE, FALSE
                                         Else ' background
-                                            SetColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), TRUE, FALSE
+                                            SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), TRUE, FALSE
                                         End If
 
                                     Else ' malformed sequence
@@ -475,7 +510,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
 
     ' Set the foreground or background color
-    Sub SetColor (c As Unsigned Long, isBackground As Long, isLegacy As Long)
+    Sub SetTextCanvasColor (c As Unsigned Long, isBackground As Long, isLegacy As Long)
         Shared ANSIColorLUT() As Unsigned Long
 
         Dim nRGB As Unsigned Long
@@ -506,6 +541,32 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     Function TextCanvasHeight&
         TextCanvasHeight = Height \ FontHeight
     End Function
+
+
+    ' Clears a given portion of screen without disturbing the cursor location and screen colors
+    Sub ClearTextCanvasArea (l As Long, t As Long, r As Long, b As Long)
+        Dim As Long i, w, fc, bc, x, y
+
+        w = 1 + r - l ' calculate width
+
+        If w > 0 And t <= b Then ' only proceed is width is > 0 and height is > 0
+            ' Save some stuff
+            fc = DefaultColor
+            bc = BackgroundColor
+            x = Pos(0)
+            y = CsrLin
+
+            Color Black, Black ' lights out
+
+            For i = t To b
+                Locate i, l: Print String$(w, ANSI_NUL); ' fill with NUL
+            Next
+
+            ' Restore saved stuff
+            Color fc, bc
+            Locate y, x
+        End If
+    End Sub
 
 
     ' Initializes the ANSI legacy color LUT
