@@ -53,13 +53,14 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long i, ch ' the current character index and the character
         ReDim arg(1 To ANSI_ARG_COUNT) As Long ' CSI argument list
         Dim As Long argIndex ' the current CSI argument index & count; 0 means no arguments
-        Dim As Long leadInPrefix ' the type of lead-in prefix that was specified; this can help diffrentiate what the argument will be used for
+        'Dim As Long leadInPrefix ' the type of lead-in prefix that was specified; this can help diffrentiate what the argument will be used for
         Dim As Long isBold, isBlink, isInvert ' text attributes
         Dim As Long x, y, z ' temp variables used in many places (usually as counters / index)
         Dim As Long fc, bc ' legacy foreground and background colors
-        Dim As Long sX, sY ' saved cursor position
+        Dim As Long savedDECX, savedDECY ' DEC saved cursor position
+        Dim As Long savedASYSX, savedASYSY ' ANSI.SYS saved cursor position
         ' The variables below are used to save various things that are restored before the function exits
-        Dim As Long oldControlChr, oldCursorX, oldCursorY, oldPrintMode
+        Dim As Long oldControlChr, oldPrintMode
         Dim As Unsigned Long oldForegroundColor, oldBackgroundColor
 
         ' We only support rendering to 32bpp images
@@ -74,17 +75,19 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ' Save some stuff that we might be changing
         oldPrintMode = PrintMode
         oldControlChr = ControlChr
-        oldCursorX = Pos(0)
-        oldCursorY = CsrLin
         oldForegroundColor = DefaultColor
         oldBackgroundColor = BackgroundColor
 
         ' Now we are free to change whatever we saved above
         PrintMode FillBackground ' set the print mode to fill the character background
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
-        Locate , 1, 0 ' reset cursor to the left of the screen and turn off the cursor
-        sX = Pos(0)
-        sY = CsrLin
+
+        ' Save the current cursor position
+        savedDECX = Pos(0)
+        savedDECY = CsrLin
+        savedASYSX = savedDECX
+        savedASYSY = savedDECY
+
         ' Reset the foreground and background color
         fc = ANSI_DEFAULT_COLOR_FOREGROUND
         SetColor fc, FALSE, TRUE
@@ -139,12 +142,12 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                             state = ANSI_STATE_TEXT
 
                         Case ANSI_ESC_DECSC ' Save Cursor Position in Memory
-                            sX = Pos(0)
-                            sY = CsrLin
+                            savedDECX = Pos(0)
+                            savedDECY = CsrLin
                             state = ANSI_STATE_TEXT
 
                         Case ANSI_ESC_DECSR ' Restore Cursor Position from Memory
-                            Locate sY, sX
+                            Locate savedDECY, savedDECX
                             state = ANSI_STATE_TEXT
 
                         Case ANSI_ESC_RI ' Reverse Index
@@ -155,7 +158,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                         Case ANSI_ESC_CSI ' handle CSI
                             ReDim arg(1 To ANSI_ARG_COUNT) As Long ' reset the control sequence arguments
                             argIndex = 0 ' reset argument index
-                            leadInPrefix = 0 ' reset lead-in prefix
+                            'leadInPrefix = 0 ' reset lead-in prefix
                             state = ANSI_STATE_SEQUENCE
 
                         Case Else ' throw an error for stuff we are not handling
@@ -176,7 +179,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     argIndex = argIndex + 1 ' increment the argument index
 
                                 Case ANSI_EQUALS_SIGN, ANSI_GREATER_THAN_SIGN, ANSI_QUESTION_MARK ' handle lead-in prefix
-                                    leadInPrefix = ch ' just save the prefix type
+                                    ' NOP: leadInPrefix = ch ' just save the prefix type
 
                                 Case Else ' throw an error for stuff we are not handling
                                     Error ERROR_FEATURE_UNAVAILABLE
@@ -336,11 +339,11 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Loop
 
                                 Case ANSI_ESC_CSI_SCP ' ANSI.SYS: Save Current Cursor Position
-                                    sX = Pos(0)
-                                    sY = CsrLin
+                                    savedASYSX = Pos(0)
+                                    savedASYSY = CsrLin
 
                                 Case ANSI_ESC_CSI_RCP ' ANSI.SYS: Restore Saved Cursor Position
-                                    Locate sY, sX
+                                    Locate savedASYSY, savedASYSX
 
                                 Case ANSI_ESC_CSI_PABLODRAW_24BPP ' PabloDraw 24-bit ANSI sequences
                                     If 4 = argIndex Then ' we need 4 arguments
@@ -458,7 +461,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
             ControlChr On
         End If
 
-        Locate oldCursorY, oldCursorX
         Color oldForegroundColor, oldBackgroundColor
 
         Select Case oldPrintMode
