@@ -99,6 +99,7 @@ $If ANSIPRINT_BI = UNDEFINED Then
     Const ANSI_ESC_CSI_RM = 108 ' ANSI.SYS: Reset screen mode
     Const ANSI_ESC_CSI_SGR = 109 ' Select Graphic Rendition
     Const ANSI_ESC_CSI_DSR = 110 ' Device status report
+    Const ANSI_ESC_CSI_DECSCUSR = 113 ' Cursor Shape
     Const ANSI_ESC_CSI_SCP = 115 ' Save Current Cursor Position
     Const ANSI_ESC_CSI_PABLODRAW_24BPP = 116 ' PabloDraw 24-bit ANSI sequences
     Const ANSI_ESC_CSI_RCP = 117 ' Restore Saved Cursor Position

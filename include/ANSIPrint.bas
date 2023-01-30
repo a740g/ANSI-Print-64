@@ -10,6 +10,11 @@
 ' https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
 ' https://talyian.github.io/ansicolors/
 ' https://www.acid.org/info/sauce/sauce.htm
+'
+' TODO:
+'   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#screen-colors
+'   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#window-title
+'   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#soft-reset
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -26,6 +31,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     '$Debug
     'Screen NewImage(8 * 80, 16 * 60, 32)
     'Font 8
+
+    'PrintANSI Chr$(ANSI_ESC) + "[35;46mHello world!" + Chr$(ANSI_ESC) + "[m" + Chr$(27) + "[Hmore text", -1
 
     'Do
     '    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
@@ -57,7 +64,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         'Dim As Long leadInPrefix ' the type of lead-in prefix that was specified; this can help diffrentiate what the argument will be used for
         Dim As Long isBold, isBlink, isInvert ' text attributes
         Dim As Long x, y, z ' temp variables used in many places (usually as counters / index)
-        Dim As Long fc, bc ' legacy foreground and background colors
+        Dim As Unsigned Long fc, bc ' foreground and background colors
         Dim As Long savedDECX, savedDECY ' DEC saved cursor position
         Dim As Long savedSCOX, savedSCOY ' SCO saved cursor position
         ' The variables below are used to save various things that are restored before the function exits
@@ -200,91 +207,77 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                         Case ANSI_AT_SIGN To ANSI_TILDE ' final byte
                             Select Case ch
                                 Case ANSI_ESC_CSI_SM, ANSI_ESC_CSI_RM ' Set and reset screen mode
-                                    Select Case argIndex
-                                        Case 1
-                                            Select Case arg(1)
-                                                Case 0 To 6, 14 To 18 ' all mode changes are ignored. the screen type must be set by the caller
-                                                    ' NOP
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
 
-                                                Case 7 ' Enable / disable line wrapping
-                                                    ' NOP: QB64 does line wrapping by default
-                                                    If ANSI_ESC_CSI_RM = ch Then ' ANSI_ESC_CSI_RM disable line wrapping unsupported
-                                                        Error ERROR_FEATURE_UNAVAILABLE
-                                                    End If
+                                    Select Case arg(1)
+                                        Case 0 To 6, 14 To 18 ' all mode changes are ignored. the screen type must be set by the caller
+                                            ' NOP
 
-                                                Case 12 ' Text Cursor Enable / Disable Blinking
-                                                    ' NOP
+                                        Case 7 ' Enable / disable line wrapping
+                                            ' NOP: QB64 does line wrapping by default
+                                            If ANSI_ESC_CSI_RM = ch Then ' ANSI_ESC_CSI_RM disable line wrapping unsupported
+                                                Error ERROR_FEATURE_UNAVAILABLE
+                                            End If
 
-                                                Case 25 ' make cursor visible / invisible
-                                                    If ANSI_ESC_CSI_SM = ch Then ' ANSI_ESC_CSI_SM make cursor visible
-                                                        Locate , , 1
-                                                    Else ' ANSI_ESC_CSI_RM make cursor invisible
-                                                        Locate , , 0
-                                                    End If
+                                        Case 12 ' Text Cursor Enable / Disable Blinking
+                                            ' NOP
 
-                                                Case Else ' throw an error for stuff we are not handling
-                                                    Error ERROR_FEATURE_UNAVAILABLE
+                                        Case 25 ' make cursor visible / invisible
+                                            If ANSI_ESC_CSI_SM = ch Then ' ANSI_ESC_CSI_SM make cursor visible
+                                                Locate , , 1
+                                            Else ' ANSI_ESC_CSI_RM make cursor invisible
+                                                Locate , , 0
+                                            End If
 
-                                            End Select
-
-                                        Case Else ' this should never happen
-                                            Error ERROR_CANNOT_CONTINUE
+                                        Case Else ' throw an error for stuff we are not handling
+                                            Error ERROR_FEATURE_UNAVAILABLE
 
                                     End Select
 
                                 Case ANSI_ESC_CSI_ED ' Erase in Display
-                                    Select Case argIndex
-                                        Case 0, 1
-                                            Select Case arg(1)
-                                                Case 0 ' clear from cursor to end of screen
-                                                    ClearTextCanvasArea Pos(0), CsrLin, TextCanvasWidth, CsrLin ' first clear till the end of the line starting from the cursor
-                                                    ClearTextCanvasArea 1, CsrLin + 1, TextCanvasWidth, TextCanvasHeight ' next clear the whole canvas below the cursor
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
 
-                                                Case 1 ' clear from cursor to beginning of the screen
-                                                    ClearTextCanvasArea 1, CsrLin, Pos(0), CsrLin ' first clear from the beginning of the line till the cursor
-                                                    ClearTextCanvasArea 1, 1, TextCanvasWidth, CsrLin - 1 ' next clear the whole canvas above the cursor
+                                    Select Case arg(1)
+                                        Case 0 ' clear from cursor to end of screen
+                                            ClearTextCanvasArea Pos(0), CsrLin, TextCanvasWidth, CsrLin ' first clear till the end of the line starting from the cursor
+                                            ClearTextCanvasArea 1, CsrLin + 1, TextCanvasWidth, TextCanvasHeight ' next clear the whole canvas below the cursor
 
-                                                Case 2 ' clear entire screen (and moves cursor to upper left like ANSI.SYS)
-                                                    Cls
+                                        Case 1 ' clear from cursor to beginning of the screen
+                                            ClearTextCanvasArea 1, CsrLin, Pos(0), CsrLin ' first clear from the beginning of the line till the cursor
+                                            ClearTextCanvasArea 1, 1, TextCanvasWidth, CsrLin - 1 ' next clear the whole canvas above the cursor
 
-                                                Case 3 ' clear entire screen and delete all lines saved in the scrollback buffer (scrollback stuff not supported)
-                                                    ClearTextCanvasArea 1, 1, TextCanvasWidth, TextCanvasHeight
+                                        Case 2 ' clear entire screen (and moves cursor to upper left like ANSI.SYS)
+                                            Cls
 
-                                                Case Else ' throw an error for stuff we are not handling
-                                                    Error ERROR_FEATURE_UNAVAILABLE
+                                        Case 3 ' clear entire screen and delete all lines saved in the scrollback buffer (scrollback stuff not supported)
+                                            ClearTextCanvasArea 1, 1, TextCanvasWidth, TextCanvasHeight
 
-                                            End Select
-
-                                        Case Else ' this should never happen
-                                            Error ERROR_CANNOT_CONTINUE
+                                        Case Else ' throw an error for stuff we are not handling
+                                            Error ERROR_FEATURE_UNAVAILABLE
 
                                     End Select
 
                                 Case ANSI_ESC_CSI_EL ' Erase in Line
-                                    Select Case argIndex
-                                        Case 0, 1
-                                            Select Case arg(1)
-                                                Case 0 ' erase from cursor to end of line
-                                                    ClearTextCanvasArea Pos(0), CsrLin, TextCanvasWidth, CsrLin
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
 
-                                                Case 1 ' erase start of line to the cursor
-                                                    ClearTextCanvasArea 1, CsrLin, Pos(0), CsrLin
+                                    Select Case arg(1)
+                                        Case 0 ' erase from cursor to end of line
+                                            ClearTextCanvasArea Pos(0), CsrLin, TextCanvasWidth, CsrLin
 
-                                                Case 2 ' erase the entire line
-                                                    ClearTextCanvasArea 1, CsrLin, TextCanvasWidth, CsrLin
+                                        Case 1 ' erase start of line to the cursor
+                                            ClearTextCanvasArea 1, CsrLin, Pos(0), CsrLin
 
-                                                Case Else ' throw an error for stuff we are not handling
-                                                    Error ERROR_FEATURE_UNAVAILABLE
+                                        Case 2 ' erase the entire line
+                                            ClearTextCanvasArea 1, CsrLin, TextCanvasWidth, CsrLin
 
-                                            End Select
-
-                                        Case Else ' this should never happen
-                                            Error ERROR_CANNOT_CONTINUE
+                                        Case Else ' throw an error for stuff we are not handling
+                                            Error ERROR_FEATURE_UNAVAILABLE
 
                                     End Select
 
                                 Case ANSI_ESC_CSI_SGR ' Select Graphic Rendition
                                     x = 1 ' start with the first argument
+                                    If argIndex < 1 Then argIndex = 1 ' this allows '[m' to be treated as [0m
                                     Do While x <= argIndex ' loop through the argument list and process each argument
                                         Select Case arg(x)
                                             Case 0 ' reset all modes (styles and colors)
@@ -306,8 +299,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 isBold = FALSE
                                                 SetTextCanvasColor fc, isInvert, TRUE
 
-                                            Case 3, 4, 23, 24 ' set / reset italic mode, set underline mode ignored
-                                                ' TODO: This can be used if we load monospaced TTF fonts using 'italics', 'underline' properties
+                                            Case 3, 4, 23, 24 ' set / reset italic & underline mode ignored
+                                                ' NOP: This can be used if we load monospaced TTF fonts using 'italics', 'underline' properties
 
                                             Case 5, 6 ' turn blinking on
                                                 If bc < 8 Then bc = bc + 8
@@ -339,7 +332,26 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 SetTextCanvasColor fc, isInvert, TRUE
 
                                             Case 38 ' set 8-bit 256 or 24-bit RGB foreground color
-                                                Error ERROR_FEATURE_UNAVAILABLE
+                                                z = argIndex - x ' get the number of arguments remaining
+
+                                                If z < 1 Then Error ERROR_CANNOT_CONTINUE ' we need one more args to check what kind of extended color we have to use
+
+                                                If arg(x + 1) = 2 And z >= 4 Then ' 32bpp color with 5 arguments
+                                                    fc = RGB32(arg(x + 2) And &HFF, arg(x + 3) And &HFF, arg(x + 4) And &HFF)
+                                                    SetTextCanvasColor fc, isInvert, FALSE
+
+                                                    x = x + 4 ' skip to last used arg
+
+                                                ElseIf arg(x + 1) = 5 And z >= 2 Then ' 256 color with 3 arguments
+                                                    fc = arg(x + 2)
+                                                    SetTextCanvasColor fc, isInvert, TRUE
+
+                                                    x = x + 2 ' skip to last used arg
+
+                                                Else
+                                                    Error ERROR_CANNOT_CONTINUE
+
+                                                End If
 
                                             Case 39 ' set default foreground color
                                                 fc = ANSI_DEFAULT_COLOR_FOREGROUND
@@ -351,7 +363,26 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                                 SetTextCanvasColor bc, Not isInvert, TRUE
 
                                             Case 48 ' set 8-bit 256 or 24-bit RGB background color
-                                                Error ERROR_FEATURE_UNAVAILABLE
+                                                z = argIndex - x ' get the number of arguments remaining
+
+                                                If z < 1 Then Error ERROR_CANNOT_CONTINUE ' we need one more args to check what kind of extended color we have to use
+
+                                                If arg(x + 1) = 2 And z >= 4 Then ' 32bpp color with 5 arguments
+                                                    bc = RGB32(arg(x + 2) And &HFF, arg(x + 3) And &HFF, arg(x + 4) And &HFF)
+                                                    SetTextCanvasColor bc, Not isInvert, FALSE
+
+                                                    x = x + 4 ' skip to last used arg
+
+                                                ElseIf arg(x + 1) = 5 And z >= 2 Then ' 256 color with 3 arguments
+                                                    bc = arg(x + 2)
+                                                    SetTextCanvasColor bc, Not isInvert, TRUE
+
+                                                    x = x + 2 ' skip to last used arg
+
+                                                Else
+                                                    Error ERROR_CANNOT_CONTINUE
+
+                                                End If
 
                                             Case 49 ' set default background color
                                                 bc = ANSI_DEFAULT_COLOR_BACKGROUND
@@ -374,47 +405,55 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Loop
 
                                 Case ANSI_ESC_CSI_SCP ' Save Current Cursor Position (SCO)
+                                    If argIndex > 0 Then Error ERROR_CANNOT_CONTINUE ' was not expecting args
+
                                     savedSCOX = Pos(0)
                                     savedSCOY = CsrLin
 
                                 Case ANSI_ESC_CSI_RCP ' Restore Saved Cursor Position (SCO)
+                                    If argIndex > 0 Then Error ERROR_CANNOT_CONTINUE ' was not expecting args
+
                                     Locate savedSCOY, savedSCOX
 
                                 Case ANSI_ESC_CSI_PABLODRAW_24BPP ' PabloDraw 24-bit ANSI sequences
-                                    If 4 = argIndex Then ' we need 4 arguments
-                                        If Not arg(1) Then ' foreground
-                                            SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), FALSE, FALSE
-                                        Else ' background
-                                            SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), TRUE, FALSE
-                                        End If
+                                    If argIndex <> 4 Then Error ERROR_CANNOT_CONTINUE ' we need 4 arguments
 
-                                    Else ' malformed sequence
-                                        Error ERROR_CANNOT_CONTINUE
-
+                                    If Not arg(1) Then ' foreground
+                                        SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), FALSE, FALSE
+                                    Else ' background
+                                        SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), TRUE, FALSE
                                     End If
 
                                 Case ANSI_ESC_CSI_CUP, ANSI_ESC_CSI_HVP ' Cursor position or Horizontal and vertical position
+                                    If argIndex > 2 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 2 args
+
                                     y = TextCanvasHeight
                                     If arg(1) < 1 Then
                                         arg(1) = 1
                                     ElseIf arg(1) > y Then
                                         arg(1) = y
                                     End If
+
                                     x = TextCanvasWidth
                                     If arg(2) < 1 Then
                                         arg(2) = 1
                                     ElseIf arg(2) > x Then
                                         arg(2) = x
                                     End If
+
                                     Locate arg(1), arg(2) ' line #, column #
 
                                 Case ANSI_ESC_CSI_CUU ' Cursor up
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     If arg(1) < 1 Then arg(1) = 1
                                     y = CsrLin - arg(1)
                                     If y < 1 Then arg(1) = 1
                                     Locate y
 
                                 Case ANSI_ESC_CSI_CUD ' Cursor down
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     If arg(1) < 1 Then arg(1) = 1
                                     y = CsrLin + arg(1)
                                     z = TextCanvasHeight
@@ -422,6 +461,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Locate y
 
                                 Case ANSI_ESC_CSI_CUF ' Cursor forward
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     If arg(1) < 1 Then arg(1) = 1
                                     x = Pos(0) + arg(1)
                                     z = TextCanvasWidth
@@ -429,12 +470,16 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Locate , x
 
                                 Case ANSI_ESC_CSI_CUB ' Cursor back
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     If arg(1) < 1 Then arg(1) = 1
                                     x = Pos(0) - arg(1)
                                     If x < 1 Then x = 1
                                     Locate , x
 
                                 Case ANSI_ESC_CSI_CNL ' Cursor Next Line
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     If arg(1) < 1 Then arg(1) = 1
                                     y = CsrLin + arg(1)
                                     z = TextCanvasHeight
@@ -442,12 +487,16 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Locate y, 1
 
                                 Case ANSI_ESC_CSI_CPL ' Cursor Previous Line
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     If arg(1) < 1 Then arg(1) = 1
                                     y = CsrLin - arg(1)
                                     If y < 1 Then y = 1
                                     Locate y, 1
 
                                 Case ANSI_ESC_CSI_CHA ' Cursor Horizontal Absolute
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     x = TextCanvasWidth
                                     If arg(1) < 1 Then
                                         arg(1) = 1
@@ -457,6 +506,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                     Locate , arg(1)
 
                                 Case ANSI_ESC_CSI_VPA ' Vertical Line Position Absolute
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
                                     y = TextCanvasHeight
                                     If arg(1) < 1 Then
                                         arg(1) = 1
@@ -464,6 +515,24 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                         arg(1) = y
                                     End If
                                     Locate arg(1)
+
+                                Case ANSI_ESC_CSI_DECSCUSR
+                                    If argIndex > 1 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 1 arg
+
+                                    Select Case arg(1)
+                                        Case 0, 3, 4 ' Default, Blinking & Steady underline cursor shape
+                                            Locate , , , 29, 31 ' this should give a nice underline cursor
+
+                                        Case 1, 2 ' Blinking & Steady block cursor shape
+                                            Locate , , , 0, 31 ' this should give a full block cursor
+
+                                        Case 5, 6 ' Blinking & Steady bar cursor shape
+                                            Locate , , , 16, 31 ' since we cannot get a bar cursor in QB64, we'll just use a half-block cursor
+
+                                        Case Else ' throw an error for stuff we are not handling
+                                            Error ERROR_FEATURE_UNAVAILABLE
+
+                                    End Select
 
                                 Case Else ' throw an error for stuff we are not handling
                                     Error ERROR_FEATURE_UNAVAILABLE
@@ -559,7 +628,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
             Color Black, Black ' lights out
 
             For i = t To b
-                Locate i, l: Print String$(w, ANSI_NUL); ' fill with NUL
+                Locate i, l: Print Space$(w); ' fill with SPACE
             Next
 
             ' Restore saved stuff
