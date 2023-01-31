@@ -16,7 +16,7 @@ Screen NewImage(8 * 80, 16 * 60, 32)
 Font 8
 
 Do
-    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
+    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Art Files")
     If Not FileExists(ansFile) Then Exit Do
 
     Dim fh As Long: fh = FreeFile

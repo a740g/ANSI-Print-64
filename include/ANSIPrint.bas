@@ -35,7 +35,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     'PrintANSI Chr$(ANSI_ESC) + "[35;46mHello world!" + Chr$(ANSI_ESC) + "[m" + Chr$(27) + "[Hmore text", -1
 
     'Do
-    '    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Files")
+    '    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Art Files")
     '    If Not FileExists(ansFile) Then Exit Do
 
     '    Dim fh As Long: fh = FreeFile
@@ -63,7 +63,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long argIndex ' the current CSI argument index & count; 0 means no arguments
         'Dim As Long leadInPrefix ' the type of lead-in prefix that was specified; this can help diffrentiate what the argument will be used for
         Dim As Long isBold, isBlink, isInvert ' text attributes
-        Dim As Long x, y, z ' temp variables used in many places (usually as counters / index)
+        Dim As Long x, y, z ' temp variables used in many places (usually as counter / index)
         Dim As Unsigned Long fc, bc ' foreground and background colors
         Dim As Long savedDECX, savedDECY ' DEC saved cursor position
         Dim As Long savedSCOX, savedSCOY ' SCO saved cursor position
@@ -614,7 +614,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
     ' Clears a given portion of screen without disturbing the cursor location and screen colors
     Sub ClearTextCanvasArea (l As Long, t As Long, r As Long, b As Long)
-        Dim As Long i, w, fc, bc, x, y
+        Dim As Long i, w, x, y
+        Dim As Unsigned Long fc, bc
 
         w = 1 + r - l ' calculate width
 
@@ -642,6 +643,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     Sub InitializeANSIColorLUT
         Shared ANSIColorLUT() As Unsigned Long
 
+        Dim As Long c, i, r, g, b
+
         ' The first 16 are the standard 16 ANSI colors (VGA style)
         ANSIColorLUT(0) = RGB32(0, 0, 0) '  0 black
         ANSIColorLUT(1) = RGB32(170, 0, 0) '  1 red
@@ -659,8 +662,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ANSIColorLUT(13) = RGB32(255, 85, 255) ' 13 bright magenta
         ANSIColorLUT(14) = RGB32(85, 255, 255) ' 14 bright cyan
         ANSIColorLUT(15) = RGB32(255, 255, 255) ' 15 bright white
-
-        Dim As Long c, i, r, g, b
 
         ' The next 216 colors (16-231) are formed by a 3bpc RGB value offset by 16, packed into a single value
         For c = 16 To 231
