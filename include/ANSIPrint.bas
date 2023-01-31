@@ -409,7 +409,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                 Case ANSI_ESC_CSI_PABLODRAW_24BPP ' PabloDraw 24-bit ANSI sequences
                                     If argIndex <> 4 Then Error ERROR_CANNOT_CONTINUE ' we need 4 arguments
 
-                                    SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), Not -arg(1), FALSE
+                                    SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), arg(1) = FALSE, FALSE
 
                                 Case ANSI_ESC_CSI_CUP, ANSI_ESC_CSI_HVP ' Cursor position or Horizontal and vertical position
                                     If argIndex > 2 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 2 args
