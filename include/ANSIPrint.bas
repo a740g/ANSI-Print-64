@@ -1,15 +1,6 @@
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-' QB64-PE ANSI emulator
+' QB64-PE ANSI Escape Sequence Emulator
 ' Copyright (c) 2023 Samuel Gomes
-'
-' Bibliography:
-' https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
-' https://en.wikipedia.org/wiki/ANSI_escape_code
-' https://en.wikipedia.org/wiki/ANSI.SYS
-' http://www.roysac.com/learn/ansisys.html
-' https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
-' https://talyian.github.io/ansicolors/
-' https://www.acid.org/info/sauce/sauce.htm
 '
 ' TODO:
 '   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#screen-colors
@@ -418,11 +409,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                 Case ANSI_ESC_CSI_PABLODRAW_24BPP ' PabloDraw 24-bit ANSI sequences
                                     If argIndex <> 4 Then Error ERROR_CANNOT_CONTINUE ' we need 4 arguments
 
-                                    If Not arg(1) Then ' foreground
-                                        SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), FALSE, FALSE
-                                    Else ' background
-                                        SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), TRUE, FALSE
-                                    End If
+                                    SetTextCanvasColor RGB32(arg(2) And &HFF, arg(3) And &HFF, arg(4) And &HFF), Not -arg(1), FALSE
 
                                 Case ANSI_ESC_CSI_CUP, ANSI_ESC_CSI_HVP ' Cursor position or Horizontal and vertical position
                                     If argIndex > 2 Then Error ERROR_CANNOT_CONTINUE ' was not expecting more than 2 args
