@@ -1,0 +1,1104 @@
+	   NNANSI.COM-- Enhanced MS-DOS ANSI Console Driver
+			 For EGA/VGA Displays
+
+Note: MS-DOS and Windows are trademarks of Microsoft Corporation.
+PC/XT, PC/AT, and PS/2 are trademarks of IBM Corporation.
+4DOS is a trademark of J.P. Software.
+MKS Toolkit is a trademark of Mortice Kern Systems Inc.
+PROCOMM is a trademark of Datastorm Technologies, Inc.
+Typing Tutor IV is a trademark of Kriya Systems, Inc.
+Desqview and QEMM are trademarks of Quarterdeck.
+386MAX is a trademark of Qualitas.
+
+Manufacturers' names are the trademarks of their respective manufacturers.
+That should take care of everyone.
+
+Documentation for version 1/93.
+
+This version of NNANSI contains the following improvements
+over NNANSI version 9/92:
+
+1. Support of DOS/V, the Japanese version of MS/DOS. (thanks, Akira Kikuchi!)
+
+2. Optional support of extended (101+ key) keyboard added, about a
+   decade late.
+
+3. ANSI state machine code straightened out. Keyboard remapping function 
+   fixed.
+
+
+IMPORTANT NOTE: the compiled NNANSI.COM is intended for 80286 or later
+   systems with "AT" style (12 function key) keyboards and VGA displays. You 
+   will need to recompile on systems that don't meet this requirement.
+
+
+*********INTRODUCTION
+
+NNANSI.COM (version 1/93) is an improved version of NANSI.SYS
+(version 2.2), by Daniel Kegel, which is in turn such an improvement
+over ANSI.SYS that *no one* should be without one of these.
+
+If you are using ANSI.SYS, be aware that either of these drivers
+will offer greatly improved performance and functionality over
+your current driver. Current users of NANSI.SYS with EGA or VGA
+displays (and other enhanced ANSI.SYS drivers) will notice still
+greater performance and functionality in NNANSI.SYS.
+
+Even if you don't use an ANSI.SYS driver, you will achieve major 
+performance benefits. (Note that there will be no performance
+benefits for programs that write directly to the display).
+
+
+A short list of improvements of NANSI.SYS (version 3.0) over
+ANSI.SYS: 
+
+1. Intrinsic 43 or 50 line support (MS-DOS 4.0 now has this).
+
+2. Some additional text mode escape sequences: Insert Lines,
+        Delete Lines, Insert Characters, Delete Characters.
+
+3. Greater to *much* greater performance.
+
+4. Supports higher resolutions, both text and graphic modes.
+
+5. Graphic mode cursor
+
+
+A short list of improvements of NNANSI.COM (version 1/93) over
+NANSI.SYS:
+
+1. Additional escape sequences: erase to start/end of display,
+        insert/delete lines in graphic modes, added Set Graphic
+        Rendition codes (and properly working reverse video,
+	underline, and invisible modes). Accurate ANSI escape 
+	sequence parsing
+
+2. Graphic cursor support is better, and can be disabled.
+
+3. Intrinsic support for both 43 and 50 line modes on a VGA. The
+	prompt command can be used to maintain 43 or 50 line display
+	modes. 40 column support for 43 and 50 line modes.
+
+4. Faster text mode performance; *much* faster scrolling
+        (when in "fast mode").
+
+5. Much faster performance in 640x350 to 800x600 16 color
+        graphic modes. Every ANSI control sequence (except
+        insert/delete characters and blink) work in these modes
+        as well.
+
+6. Readily configured for enhanced graphic and text modes of
+        various display cards. Support for several popular cards
+        are provided.
+
+7. Blink in 16 color graphics modes (up to 800x600) will exclusive-OR
+	characters.
+
+8. Support for MS-DOS V4.0 and later MODE commands, and properly
+	clears the display in enhanced modes using command.com's CLS.
+
+9. Driver can be loaded as TSR from the command line.
+
+10. Desqview aware.
+
+11. Supports Japanese DOS/V
+
+On the other hand, NANSI is smaller, and works with MDA as distributed.
+
+
+
+**********************LICENSE REQUIREMENTS
+
+Daniel Kegel is the author of NANSI.SYS, of which this is a derived
+work. I, Tom Almy, think enough of his efforts and programming skills
+that I used NANSI.SYS as a base for NNANSI.COM. NANSI.SYS version 2.2
+came with sources and free distribution for personal or educational
+use, but prohibits commercial use.  I have an agreement with Mr.
+Kegel to license NNANSI.COM in accordance with his newest NANSI.SYS
+license arrangement:
+
+"If you use this program for education or at home, you are
+encouraged to send a US$10 donation to the author.  If you use
+it for business purposes, you are required to purchase a
+right-to-use license by sending US$10 to the author."
+
+Send contributions/user fees to:
+
+        Daniel Kegel
+        1977 N. El Molino
+        Altadena, CA  91001
+
+You can also reach him at his permanent internet address:
+
+dank@alumni.caltech.edu
+
+
+Everyone wins with this arrangement!
+
+* Commercial users can now legally use NNANSI.COM
+
+* Personal users can show their gratitude.
+
+* Daniel Kegel can make a little money for his efforts.
+
+* I won't feel guilty for "ripping off" his work.
+
+
+I place no restrictions on my modifications to NANSI.SYS. I
+neither request nor will I accept any contributions for my work
+on this program. I made these modifications as part of an effort
+to understand the workings of DOS device drivers and the EGA/VGA
+display. 
+
+On the other hand, I do like to hear from users, satisfied or
+(even) not satisfied. 
+
+			I M P O R T A N T
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Please, if you have problems, check the PROBLEMS section of this
+document before contacting me. Greater than 90% of the problem
+reports I receive are answered in this section.
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+My address is:
+
+        tom.almy@tek.com        (Internet)
+
+or
+
+        Tom Almy
+        17830 SW Shasta Trail
+        Tualatin, OR 97062
+
+I also now run a BBS at (503)-620-0307, 1200-9600 (v.32) bps
+
+If you must use the postal service. Enclose a stamped, self-
+addressed envelope if you desire a reply.
+
+
+*********DISTRIBUTED FILES
+
+The distribution has the following files:
+
+	readme.1st	- READ THIS FIRST
+        nnansi.com      - Driver, with compilation options set as shown
+                        - in the file CONFIG.INC
+        nnansi.doc      - this file
+	howto.doc	- explaination about the different ways to
+			  write to the display
+        gcon.bat        - turns graphic cursor on
+        gcoff.bat       - turns graphic cursor off
+        fast.bat        - turns fast mode on
+        slow.bat        - turns fast mode off
+	biosw.bat	- turns ANSI bios write_tty on
+	nobiosw.bat	- turns ANSI bios write_tty off
+	25.bat		- set 80x25 text mode
+	43.bat		- set 80x43 text mode
+	50.bat		- set 80x50 text mode (VGA only)
+	run.bat		- load NNANSI TSR as full function driver
+	norun.bat	- unload NNANSI TSR when loaded as full
+			  function driver
+
+	dtest.exe	- Performance testing program for ANSI drivers
+	stat.com	- Print out information about display status
+
+        makefile        - for Don Kneller's NDMAKE
+        nnansi.asm      - The source file
+	config.inc	- Configuration selections (part of source)
+	drivers.inc	- Display specific macros (part of source)
+
+
+
+*********INSTALLATION
+
+NOTE: If you have an MDA (Monochrome or Hercules display adapter) you
+will need to reassemble NNANSI first. You will also need to
+reassemble if you are using DOS/V, an 8088 processor, an EGA display,
+or an original 84 key keyboard. You will probably want to reassemble
+to configure for your specific display card (if it is an "Enhanced"
+card), will not be using Desqview, are using a DOS prior to version
+4.0, or otherwise want other defaults.
+
+NNANSI installs just like ANSI.SYS (or NANSI.SYS), it is a device
+driver that you specify in your CONFIG.SYS file:
+
+        DEVICE=NNANSI.COM
+
+If you are using code pages, place this command before the 
+DEVICE=DISPLAY.SYS command, otherwise code pages will not work.
+
+You can also load NNANSI as a TSR (Terminate and Stay Resident)
+program instead. To do this, add the following lines to your
+AUTOEXEC.BAT file:
+
+	NNANSI D
+	CTTY CON
+
+If you wish to load the driver as a TSR in Desqview or Windows, 
+see the section on "NNANSI as a TSR". You cannot use the D option,
+and the CTTY command is not needed but the driver will have limited
+features.
+
+If NNANSI is the last TSR loaded, it can then be removed. See the
+section "NNANSI as a TSR" for the special technique necessary to
+remove NNANSI.
+
+For optimum performance, run fast.bat and biosw.bat, but if
+applications have trouble with either of these, you will have to
+revert back to slower operating modes (read section "FAST MODE").
+
+While the supplied compiled driver is suitable for most
+installations, you can get better results by customizing the driver
+for your display card. To do this you will need an assembler, such as
+Borland Turbo Assembler, a text editor, and (optionally) Don
+Kneller's NDMAKE program. I understand that Borland's MAKE will also
+work.
+
+Some people have asked why I don't have command line options for
+the driver or a separate configuring program but require the user to
+use an assembler. The reasons:
+
+1. These make the driver larger and possibly slower than it needs to be.
+   If you insist on a full-featured display driver try FANSI-CONSOLE.
+2. I feel that users who are sophisticated enough to be able to utilize
+   NNANSI either have an assembler or have access to one. This is not
+   a program for novices.  
+3. I'm lazy. I'm not interested. I've got other things to do (which pay).
+
+All options are specified in the file CONFIG.INC. Edit that
+file and make changes as appropriate. These descriptions assume
+the initial default settings:
+
+DOSV	(FALSE)
+	Set true to use with DOS/V. This option will eliminate most of 
+        NNANSI's performance improvements.
+
+VGA     (TRUE)
+        If you have an EGA display, set this to FALSE. You might
+        also want to set this to FALSE if you have a VGA and are
+        used to the ESC [=43h sequence giving 50 line mode.
+
+EGA     (FALSE)
+        If you have an EGA, set this to TRUE.
+
+MONO	(FALSE)
+	Must be TRUE if you have a Monochrome Display Adapter (MDA)
+	or Hercules card either as your sole display or in addition
+	to a color display controller. If you don't, leave this FALSE
+	as it both hurts performance and enlarges the driver. You cannot
+	use an MDA with Desqview and NNANSI at the same time.
+
+TSR	(set on tasm command line)
+	If TRUE, compiles TSR/DRIVER COM file version, otherwise compiles 
+	DRIVER only, SYS file version.
+
+DESQVIEW (TRUE)
+	If TRUE, and TSR is TRUE, compiles DESQVIEW awareness code.
+	If you don't intend to use DESQVIEW you should set this to
+	FALSE.
+
+VESA	(FALSE)
+	Set TRUE if you have a VESA compatible display card BIOS.
+	You will also need to have a particular display specified
+	for best results. VESA has been successfully tested with
+	a Diamond Speedstar card (TSENG4000 set TRUE) and using
+	Diamond's VESA BIOS extension, and with a Diamond Steath
+        with built in VESA support. When using built in VESA, there
+	seems to be a problem in selecting graphics modes via their
+	VESA mode numbers.
+
+
+VEGA, PARADISE, STBVGA...  (all FALSE)
+        Set only one of these TRUE to match your enhanced
+        EGA/VGA display card. If you have a card not on the list
+        and experience problems with either blotches in enhanced
+        text mode or poor performance (unsettable background
+        colors is a clue) in graphics modes CONTACT THE AUTHOR.
+
+BAD_ERASE	(FALSE, except if TSENG4000 selected)
+	Set to true if erase to end of line and erase to start/end of
+        screen erase the wrong portion of the display
+
+cheap_pc (FALSE)
+    	Set to FALSE for "PC/AT" and "PS/2" class machines which
+	have 80186 or greater processors.
+
+ext_keybd (TRUE)
+	Set to TRUE for "PC/AT" and "PS/2" class machines with 101+ key
+	keyboards (the kind with 12 function keys and separate cursor keys
+	from the numeric pad).
+
+key_redef (FALSE)
+        Set to TRUE if you use key redefinition. There are
+        Trojan Horse programs that take advantage of this
+        feature, and most people don't use it anyway, so the
+        default is FALSE.
+
+init_buffer_size (256)
+        Enlarge if you use key redefinition and don't have
+        enough room.
+
+quick_char (TRUE)
+        Faster graphics display in 16 color modes, at cost of
+	much extra code since this involves added display
+	routines. Must be TRUE if gbackground is also TRUE.
+
+fast29  (TRUE)
+        Makes int29 display calls (used by DOS) 15% faster at a
+        cost of about 100 bytes.
+
+bios_write_tty (TRUE)
+        The write tty BIOS call is taken over. It will now
+        perform faster and understand ANSI escape sequences. This
+	latter feature can be a mixed blessing. This feature can be
+	disabled at runtime if it is assembled in.
+
+gbackground (TRUE)
+        Enables setting of non-black background color in 16 color
+	graphic modes (640x350 to 800x600 resolutions). If set to
+	TRUE, quick_char must also be set to TRUE. If this feature is
+	not desired, it is possible (depending on the system) to get
+	greater performance by defining both gbackground and
+	quick_char FALSE. This will also save quite a bit of
+	code. Experiment and see for yourself.
+
+dos4 (TRUE)
+        Under MS/PC DOS version 4.0 (and 5.0) allows command.com and
+	mode.com to recognize NNANSI as an ANSI driver. If you are
+	using older DOS versions, you can define this to be FALSE.
+
+initgc  (FALSE)
+        Graphic mode cursor is initially off. You can turn it on/off
+	with a control sequence.
+
+initfast (FALSE)
+        Fast scroll mode is initially off. This also means that
+        multiple page support is initially on. You can turn it on/off
+	with a control sequence, and there are other work-arounds as
+	well.
+
+initbiosw (FALSE)
+	ANSI bios write_tty is initially off. You can turn it on/off
+	with a control sequence.
+
+
+You can then either use the supplied makefile to generate a new
+nnansi.sys/nnansi.com or assemble manually as shown (Borland tools
+illustrated): 
+
+tasm /m5 /DTSR=0 nnansi          (Use /m5 for version 2.0 or later)
+tlink nnansi,nnansi.sys/m/t	 (generates nnansi.sys for config.sys)
+
+tasm /m5 /DTSR=1 nnansi
+tlink nnansi,nnansi.bin/m/t	(generates nnansi.com for config.sys
+rename nnansi.bin nnansi.com     or TSR use)
+
+The .sys driver offers no advantages other than it takes less memory
+while loading (this might be a consideration with some high memory
+management programs). For this reason, a .sys version is no longer
+distributed.
+
+
+IMPORTANT NOTE FOR USERS OF BORLAND TURBO ASSEMBLER V3.0: 
+
+There is a bug in this version which causes the assembler to hang
+when assembling the sys version of NNANSI. The solution is to only
+build the com version. The bug is fixed with V3.1.
+
+
+NOTE FOR MICROSOFT MASM USERS:
+
+With the Microsoft assembler, you will need to make some changes to
+the source to avoid the branch out of range errors, and you will need
+to use the exe2bin program to convert the linker generated exe file
+into a binary image file, which you then have to rename to
+NNANSI.SYS or NNANSI.COM.
+
+To correct the branch out of range, you will need to replace the conditional
+branch with an conditional branch of the opposite sense around an
+unconditional branch to the same destination. Example:
+
+	jne	foo	; original statement, now "out of range"
+
+becomes:
+
+	je	new_label
+	jmp	foo
+new_label:
+
+
+You will also need to delete the first few lines in NNANSI.ASM, which
+are directives for the Borland Assembler.
+
+
+**************NNANSI AS A TSR**
+
+NNANSI can now be loaded as a TSR in two modes, limited and full. If
+you intend to use NNANSI as a TSR, such as in a Desqview window, or
+for temporary use, please read this section carefully.
+
+
+To load NNANSI in full driver mode, execute the following two commands
+(or execute run.bat):
+
+nnansi d
+ctty con
+
+This will load the driver such as it runs identically to NNANSI loaded
+as a driver in CONFIG.SYS. This means that not only does it take control
+of several interrupt vectors, the driver is also linked into the DOS
+driver chain. The CTTY command is necessary to force command.com to 
+"reopen" its console interface to use the NNANSI driver.
+
+This method must not be used within a multitasking environment such
+as Microsoft Windows or Desqview, because the relinking of the driver
+chain corrupts system integrity. However it may be used to load
+NNANSI before running Windows. In the Desqview case, a batch file can
+be used to unload NNANSI, run Desqview, and then reload NNANSI when
+finished.
+
+Within each DOS window in Windows or Desqview, the limited version of the
+NNANSI TSR can be loaded (described below). The copy of NNANSI should
+be unloaded before closing the DOS window.
+
+NNANSI in full driver mode can be unloaded using the following procedure
+providing it is the last TSR loaded, you are not "shelled out" of a program,
+are running the same instance of COMMAND.COM, and did not load NNANSI
+"high" using QEMM, 386/MAX, or DOS 5.0. From a batch file, execute:
+
+@echo off
+nnansi u
+ctty con
+
+The ctty command must be executed immediately after the NNANSI command,
+otherwise the system may "crash". The batch file norun.bat is provided
+to unload NNANSI.
+
+Note that full driver mode NANNSI must be uninstalled using NNANSI, and
+not with a TSR management program. Such programs are incapable of
+unchaining NNANSI from the device driver list.
+
+--------------------
+
+NNANSI also has a limited TSR mode. In this mode the driver is not
+linked into the DOS driver chain. To load NNANSI in limited mode execute:
+
+nnansi
+
+In limited mode the device status report will not function, nor will
+keyboard key reassignment. The DOS MODE command will not change the
+number of display lines either. Also the performance improvement for
+RAW mode (which gives NNANSI its greatest performance) will not be
+available.
+
+You can unload NNANSI which has been loaded in limited mode by executing:
+
+nnansi u
+
+
+The limited TSR mode driver can be used in a Microsoft Windows or Desqview
+window without problems. You can also uninstall the limited mode driver
+with a TSR management program.
+
+
+
+**************HOW MUCH PERFORMANCE IMPROVEMENT IS THERE?
+
+I have performed considerable testing on an EVEREX 25Mhz 80386
+machine with a Video 7 (Headland) Fastwrite VGA display controller
+(and its BIOS), under both DOS 3.3 and 4.0. Your results will
+probably vary, and BIOS performance without NNANSI will also improve
+if the EGA/VGA BIOS is copied to RAM as supported by some vendors and
+also possible with QEMM or 386/MAX on 80386 based systems.
+
+Performance is proportional to roughly independent factors, writing
+speed and scrolling speed. Writing speed is the rate at which
+characters can be drawn on the display without the display scrolling.
+Scrolling speed is the rate at which the display can scroll (no
+new characters are drawn). Writing speed tends to be independent of
+display mode (except graphic modes are slower), while scrolling speed
+tends to be proportional to the number of character positions on the
+display (except for NNANSI fast mode, which is independent of screen
+size). 
+
+When using ANSI.SYS rather than no driver at all, there is roughly a
+2.3x degradation in performance for writing. Scrolling performance
+improves 44% when DOS 4.0 ANSI driver is used, but remains unchanged
+with the DOS 3.3 driver.
+
+Compared to no driver, NANSI.SYS (3.0) is 3x to 3.5x faster for
+writing, and is roughly 45x faster when writing using DOS in RAW
+mode. It is roughly 2x faster scrolling.
+
+Compared to the no driver or other ANSI drivers, NNANSI is 4x faster
+in BIOS TTY write calls. 
+
+Compared to NANSI.SYS it is 2x faster in INT29 calls, 73% faster in
+DOS write calls, but there is no speedup in RAW mode. When fast mode
+is used, scrolling is 15x to 25x faster.
+
+This means that text mode programs that take advantage of RAW
+mode and buffering can display 100 times faster with NNANSI (and
+without scrolling, NANSI) over ANSI.SYS. It works out to about
+420,000 characters per second with my fast machine.
+
+NNANSI also has speedups for 16 color graphic modes with resolutions
+between 640x350 and 800x600. With the graphic cursor turned on, the
+TTY BIOS call is about 10% slower than the standard BIOS call (which
+doesn't display a cursor), but other output calls are 2.5x to 3.5x
+faster than that of NANSI.SYS. Turning the graphics cursor off
+roughly doubles the writing speed of all modes but RAW.
+
+
+
+**************FAST MODE  **READ THIS!!**
+
+To get maximum speed, NNANSI has what I call Fast Mode. In text
+mode, there is more display memory than there are character on
+the display. Normally, the BIOS supports display "pages" that you
+can switch among. Changing the display page changes the region
+of the display memory that is sent to the display. Fast Mode
+uses the same technique (changing the starting location of the
+viewable memory region) to scroll the display upwards. 
+
+Programs that make use of multiple display pages and scroll the
+display require that fast mode be turned off. Many debugging programs
+use two pages to maintain separate debugging and application
+displays. Some of the programs will still work in fast mode if they
+have a "swap screens" option ("-ds" for Borland Turbo Debugger, for
+instance).
+
+A number of programs that directly access the display don't work if
+starting address has changed. These programs may not work properly in
+fast mode (or for that matter in display pages other than the first).
+NNANSI tries its best to work with these programs by resetting the
+display start location if any program does the "get display mode" or
+"scroll/clear display" BIOS calls. These calls are typically done by
+potentially offending applications when they start. As long as the
+display never scrolls under NNANSI control everything will work fine.
+A typical problem occurs in programs that have DOS or "shell escape"
+commands. If the DOS sub-shell (invocation of COMMAND.COM) causes the
+display to scroll, then upon exiting the sub-shell the display will
+be ruined. The solution to this problem (other than not using fast
+mode) is to clear the screen just before exiting the sub-shell.
+
+Please note that Windows 3.0 in Enhanced Mode has problems with DOS
+applications running in a window using NNANSI's fast mode. You will
+need to run Windows with NNANSI in slow mode.
+
+Some offending programs can be "fixed" by invoking them from a
+batch file (or alias if you use MKS Toolkit, 4DOS, ANARKEY...)
+which first clears the screen. Or you can use a batch file which
+turns off fast mode, then turn fast mode back on again after
+program execution. Example:
+
+echo ^[[=98l
+offendingpgm %1 %2 %3 %4 %5
+echo ^[[=98h
+
+Where "^[" is the escape (code 27) character.
+
+Batch programs have been provided to enable (fast.bat) and disable
+(slow.bat) fast mode.
+
+
+NNANSI can also speed up programs that use BIOS calls for writing
+characters. NNANSI adds the ANSI features to such calls, which can
+cause problems with some applications. This feature is turned off by
+default, but can be enabled via an ANSI sequence or by executing the
+supplied batch file biosw.bat. The feature can be disabled with
+nobiosw.bat.
+
+
+******************WRITING PROGRAMS FOR BEST PERFORMANCE
+
+
+To get best performance in programs you write, you must put the
+display in RAW mode, and buffer output.
+
+In assembler, you can set raw mode with the following sequence
+(adapt this for other languages):
+
+        mov     ax,4400h        ; get device status
+        mov     bx, 1           ; of device 1 (standard output)
+        int     21h
+        xor     dh, dh          ; clear upper byte
+        mov     saved_state, dx ; save it for later
+        mov     ax, 4401h       ; set new status
+        or      dl, 20h         ; with raw bit set
+        int     21h
+
+Reset raw mode before terminating the application:
+
+        mov     ax, 4401h       ; set status to original values
+        mov     bx, 1
+        mov     dx, saved_state
+        int     21h
+
+There is a fixed amount of overhead (and it is high) for each
+DOS call. Therefore you should buffer up write requests into a
+single call. With the C language, you can use the setvbuf() call
+to set a large buffer size.
+
+Even if you don't follow this advice, you will get a major
+performance improvement over ANSI.SYS (or no device driver at
+all). 
+
+Programs using RAW mode and buffering easily beat the
+performance of the supposedly high speed console drivers
+supplied in Turbo C and Microsoft C. And by using ANSI control
+sequences your programs can be made portable to other systems!
+
+
+*****************TYPICAL PROBLEMS
+
+
+ALSO READ THE SECTION "FAST MODE"
+
+
+SYSTEM CRASHES UPON BOOTING, OR DISPLAY BADLY CORRUPTED EVEN IN
+STANDARD 80x25 TEXT MODE.
+
+You have assembled NNANSI with cheap_pc set to FALSE on an 8088 based
+system, or you are trying to use NNANSI on an MDA or Hercules
+Graphics equipped system without reassembling with MONO equal TRUE.
+
+This can also happen if you are using DOS/V with NNANSI not compiled for
+DOS/V operation.
+
+
+KEYBOARD IS "LOCKED"
+
+You have set ext_keybd TRUE when you have an original style (10 function
+key) keyboard, or a BIOS that does not support the extended keyboard.
+
+
+ON A VGA, SETTING 43 LINE MODE GIVES 43 LINES, WHEN IT GAVE 50
+WITH AN OLDER VERSION OF NNANSI.SYS OR WITH NANSI.SYS
+
+This is correct. There is now a new setting for 50 line mode. If
+you require that 43 line mode give 50 lines, recompile the
+system with VGA set to FALSE.
+
+
+I USED AN EARLIER VERSION OF NNANSI, AND NOW I FIND THAT NNANSI IS
+MUCH SLOWER THAN BEFORE
+
+The defaults have changed. You now have to run FAST and BIOSW for
+fastest operation.
+
+
+I USED AN EARLIER VERSION OF NNANSI, AND NOW FIND MY DISPLAY 
+INEXPLICABLY CHANGING MODES
+
+The commands for graphic cursor, fast mode, and line wrap are 
+more restrictive. Use the new batch files for fast, slow, gcon, and
+gcoff, and change any code of your own appropriately.
+
+
+ON A VGA, SETTING 50 LINE MODE CAUSES VERY STRANGE BEHAVIOR
+
+Two possibilities. Your display adapter is really an EGA, or you
+have compiled NNANSI with VGA set to FALSE. In the latter
+case, you can get 50 line mode by setting 43 line mode, while in
+the former case you can't get 50 line mode at all.
+
+
+ON A VGA, AFTER LEAVING 43/50 LINE MODE THE CURSOR IS IN THE
+MIDDLE OF THE CHARACTER BLOCK
+
+Recompile the driver with EGA set to FALSE.
+
+
+ON AN EGA, THE CURSOR DISAPPEARS IN 43 LINE MODE WHEN RUNNING
+SOME APPLICATIONS
+
+There is nothing you can do, as this is caused by an error in
+the design of the EGA BIOS.
+
+
+IN 43/50 LINE MODE, THE DOS CLS COMMAND ONLY CLEARS THE FIRST 25
+LINES OF THE DISPLAY (DOS 4.0)
+
+Reassemble with "dos4 EQU TRUE", as it is in the distribution NNANSI
+driver.
+
+
+DISPLAY SHOWS UGLY BLOCKS AT THE START AND END OF EACH LINE OR
+PERFORMANCE SLOWS GREATLY IN EXTENDED (GREATER THAN 80X25) TEXT MODES 
+
+Your display controller sets the display mode byte in the BIOS to
+some value other than "3". You can either set the byte (at location
+40:49h) back to 3 after setting the display mode, or configure NNANSI
+to know about these special modes. This problem is typical for most
+cards, it seems. There may already be a proper configuration for your
+display in CONFIG.INC. 
+
+
+DISPLAY IS NOTICEABLY SLOWER WRITING OR CANNOT SWITCH BACKGROUND
+COLORS IN EXTENDED (GREATER THAN 640x480, OR 640x350 EGA)
+GRAPHIC MODES
+
+In 256 color modes or 1024x768 modes, the background color cannot be
+changed. In other modes, you will need to configure NNANSI for your
+display card.  Look for a proper configuration in CONFIG.INC.
+
+
+DISPLAY GOES BLANK WHEN STARTING AN APPLICATION. DISPLAY SHIFTED
+PARTLY OFF SCREEN WHEN STARTING AN APPLICATION. DISPLAY
+DISAPPEARS DURING EXECUTION OF A APPLICATION.
+
+First try clearing the screen before execution. If that doesn't
+work, leave fast mode (see preceding section on FAST MODE).
+
+
+FUNNY BLOTCHES OCCASIONALLY APPEAR AT VARIOUS POINTS IN A
+GRAPHIC APPLICATION
+
+This is the graphics cursor. You can disable it either by
+reconfiguring the driver, or by sending the control sequence to
+disable the graphics cursor. A batch file, GCOFF.BAT, has been 
+provided for this purpose.
+
+
+TEXT DISPLAY IS MESSED UP, POSSIBLY CHANGING COLORS IN UNUSUAL
+PLACES. 
+
+This has been observed with programs using the BIOS for writing
+to the display, and not expecting the ANSI translation (or the
+conversion of the TAB character into spaces instead of a special
+graphic). Execute NOBIOSW.BAT to turn the ANSI translation off
+for these programs.  PROCOMM and Typing Tutor IV have this problem.
+
+
+CANNOT SET VESA STANDARD EXTENDED DISPLAY MODES
+
+You must compile the driver with VESA defined as TRUE, and then
+must request a mode 128 less than that really desired. There are also
+problems with boards having built-in VESA support without using a software
+VESA driver; for these boards you will need to set the display mode using
+the mode changing software supplied by the vendor.
+
+
+THE MODE COMMAND DOES NOT CHANGE THE NUMBER OF DISPLAY LINES
+
+The mode command does not function if NNANSI is loaded as a limited
+TSR -- install as a full TSR or as a device driver. Also, you might
+need to reassemble with "dos4 EQU TRUE", as it is in the distribution
+NNANSI driver. 
+
+
+A TSR OR REMOTE OPERATION PROGRAM DOES NOT WORK WITH NNANSI BUT DOES WITH ANSI
+
+NNANSI is incompatible with programs that expect the ANSI driver to
+write to the display using BIOS calls. I recommend the use of the
+program ANSI.COM, from PC Magazine, for these uses.
+
+
+I USE 4DOS AND CANNOT ALIAS F11 AND F12
+
+You need to recompile with ext_keybd set to TRUE.
+
+
+THE KEYBOARD REASSIGNMENT COMMAND DOES NOT SEEM TO BE WORKING
+
+By default it is disabled to prevent "ANSI BOMBS". You will need to 
+recompile with key_redef set to TRUE.
+
+
+
+*****************NNANSI COMMAND SEQUENCES
+
+Command sequences start with the escape character (code 27,
+referred to in this section as ESC). NNANSI buffers up the
+sequence until it has a command to execute. If the sequence is
+not a valid command, the entire sequence is passed to the display.
+
+All command sequences have the following format:
+
+   ESC [ param1; param2; ...; paramN cmdchar
+
+where
+       ESC     is the escape character
+       [       is the left bracket character.
+       param   are ascii decimal numbers or quoted strings.
+       cmdchar is the command character
+
+No spaces are allowed within the command.
+
+Missing arguments are defaulted to "1" unless otherwise specified
+(SGR, ED, and IBMKKR).
+
+Quoted strings may use either single or double quote characters
+as delimiters. Each character inside the quoted string is
+converted to a numeric parameter. Quoted strings are only useful
+for the questionable Keyboard Key Reassignment command.
+
+
+
+                   CURSOR POSITIONING COMMANDS
+
+NAME    DESCRIPTION             COMMAND
+CUP     cursor position         ESC[y;xH
+HVP     cursor position         ESC[y;xf
+
+        Either of these set the cursor position. CUP should be
+        used since HVP has other connotations not implemented in
+        NNANSI (or ANSI.SYS). The origin (in the upper left
+        corner) is x=1, y=1.
+
+CUU     cursor up               ESC[nA
+CUD     cursor down             ESC[nB
+        n = # of lines to move. You cannot move beyond the edge
+        of the display.
+
+CUF     cursor forward          ESC[nC
+CUB     cursor backward         ESC[nD
+        n = # of columns to move. You cannot move beyond the
+        edge of the display.
+
+DSR     Device Status Report    ESC[6n
+        Find out cursor position. The driver responds with a
+        cursor position report (CPR) of the form "ESC[y;xR"
+        followed by a carriage return, as if typed at the
+        keyboard. 
+
+SCP     Save Cursor Position    ESC[s
+RCP     Restore Cursor Position ESC[u
+        Cannot be nested.
+
+
+
+
+                        EDITING COMMANDS
+
+NAME    DESCRIPTION             COMMAND
+ED      Erase in Display        ESC[nJ
+        n=0 or missing: Erase to end of screen (not in ANSI.SYS)
+        n=1: erase to start of screen (not in ANSI.SYS)
+        n=2: erase entire screen, and home cursor
+        Note: there is a bug in ANSI.SYS that performs function
+        2 regardless of the value of n. This bug is not repeated
+        in NNANSI because of the extra functionality provided.
+	Everybody's "ANSI.SYS" homes the cursor, which the standard
+	does not call for, and NNANSI keeps up that tradition.
+
+EL      Erase in Line           ESC[K
+        Erases from cursor to end of line.
+
+IL      Insert Lines            ESC[nL 
+        Inserts n blank lines at the line containing the cursor.
+        While the cursor line moves down, the cursor position is
+        unchanged. Not in ANSI.SYS. 
+
+DL      Delete Lines            ESC[nM  
+        Deletes n lines, starting at the line containing the
+        cursor. The cursor is not moved. Not in ANSI.SYS
+        
+ICH     Insert Characters       ESC[n@  
+        Inserts n blank characters at cursor position. The
+        cursor does not move. Not in ANSI.SYS. Does not work in
+        graphic modes.
+
+DCH     Delete Characters       ESC[nP  
+        Deletes n characters at the cursor. The cursor does not
+        move. Not in ANSI.SYS. Does not work in graphic modes.
+
+
+
+
+                  SET GRAPHIC RENDITION COMMAND
+
+NAME    DESCRIPTION             COMMAND
+SGR     Set Graphics Rendition  ESC[n;n;...nm
+
+The Set Graphics Rendition command is used to select foreground
+and background colors or attributes.  When you use multiple
+parameters, they are executed in sequence, and the effects are
+cumulative.  You can set all colors and attributes in any text
+mode.  In 16 color graphic modes between 640x350 and 800x600
+pixels you can set all colors and attributes except for blink.
+"Blink" becomes exclusive-OR character mode (very useful!).  You
+can set foreground colors, blink, and bold, only, in other 16 color
+modes.  Setting colors does not work correctly for other color
+modes -- make sure display is in the normal white on black mode
+before changing to these modes.
+
+When a Monochrome Display Adapter (MDA) is used, foreground and
+background colors other than black and white should not be set. The
+MDA also ignores the underscore and bold attributes while in reverse
+video.
+
+If no arguments are given, a single "0" argument is assumed. If multiple
+arguments are given, missing arguments are taken to be "0".
+
+
+Code          Value
+0               All attributes off (normal white on black)
+1               Bold
+2               Dim (not Bold)
+4               Underscore (emulated via blue foreground in CGA/EGA/VGA)
+5               Blink (or EXOR -- see above)
+7               Reverse Video (improved implementation over ANSI)
+8               Invisible (improved operation -- foreground color
+		forced to background color, other attributes suppressed)
+22              Cancel Bold
+24              Cancel Underline (white foreground)
+25              Cancel Blink
+27              Cancel Reverse video
+28		Cancel Invisible
+30-37           foreground black/red/green/yellow/blue/magenta/cyan/white
+40-47           background black/red/green/yellow/blue/magenta/cyan/white
+
+Codes 2, 22, 24, 25, 27, and 28 are not in ANSI.SYS.
+
+
+
+                    SET DISPLAY MODE COMMAND
+
+NAME    DESCRIPTION             COMMAND
+SM      Set Mode                ESC[=nh
+RM      Reset Mode              ESC[=nl
+
+The set and reset mode commands are identical in this context.
+
+The BIOS supports many video modes. The code given for the AL
+register to the BIOS set mode command is used as the parameter to
+this set mode command. That means that extended modes that are
+settable in this manner can use this command. As an example, with the
+Diamond Speedstar, the command ESC[=34h will set 132 column by 44 row
+mode. Display cards that use other techniques to change display mode
+are left as an exercise to the user, but if you can get the card into
+an extended mode, NNANSI can used it (possibly with a configuration
+change, though).
+
+VESA Display Cards: To set VESA modes, select a mode 128 less than the
+desired mode number. For instance, for 132x43 text mode, select mode
+138 (rather than 266). 
+
+Monochrome Display Adapter (MDA): These commands are ignored when the
+MDA is in use.
+
+In the graphic modes, the cursor can be simulated with a blob
+(the character produced with character code 22).
+
+Mode Code       Value
+    0,1         text 40x25 16 color
+    2,3         text 80x25 16 color
+    4,5         graphics 320x200 4 color
+    6           graphics 640x200 Black & White
+    7		cursor wrap (see SET DISPLAY ATTRIBUTES, below)
+    13          graphics 320x200 16 color, VGA only
+    14          graphics 640x200 16 color, VGA only
+    16          graphics 640x350 16 color, VGA only
+    17          graphics 640x480 Black & White, VGA only
+    18          graphics 640x480 16 color, VGA only
+    19          graphics 300x200 256 color, VGA only
+    43          43 line mode for modes 0-3 (Not in ANSI.SYS)
+    50          50 line mode for modes 0-3 (VGA only, not in
+                ANSI.SYS)
+    n           When not in above list, sets mode n. (Not in
+                ANSI.SYS) 
+
+
+The modes marked as VGA only are not supported by ANSI.SYS
+that comes with version 3.3 MS-DOS or earlier.
+
+The 43 line and 50 line support reprograms the display to use smaller
+characters. You must be in mode 3 (80x25) or 1 (40x25) for this
+command to work. Set any other mode to leave 43/50 line mode. Unlike
+early version of NNANSI and other drivers, reselecting  the same line
+number mode (mode 3 (or 1), 43, or 50) will not cause the display to
+clear. This makes it possible to put a 43 (or 50) line command within
+the dos prompt to force this mode upon entering or returning to DOS.
+For example, you can have 43 line mode automatically selected at the
+DOS prompt by issuing this command:
+
+	prompt $e[=43h$p$g
+
+Unlike earlier versions of NNANSI, and NANSI.SYS, setting 43 line
+mode on a VGA will give 43 (not 50) lines. You must use the explicit
+50 line mode command to get 50 lines on a VGA. If you would rather
+have compatibility with these other, earlier drivers, recompile the
+driver with VGA set to FALSE.
+
+Under MS/PC DOS Version 4.0 (and later), the number of lines can
+also be set using the MODE command. For instance, to set 43 line mode
+under DOS 4.0, issue the command:
+
+	mode con lines=43
+
+Note that in older versions of NNANSI, and NANSI.SYS, the use of
+the = character in the command was optional, and a ? could be used
+instead. That is not true for this version.
+
+
+                     SET DISPLAY ATTRIBUTES
+
+NAME    DESCRIPTION             COMMAND
+SM      Set Mode                ESC[?nh
+RM      Reset Mode              ESC[?nl
+
+Valid attributes that can be set and reset:
+
+7       Cursor Wrap     When false, cursor sticks at end of
+                        line, rather than wrapping
+
+97	ANSI Bios	When true, calls of the bios write_tty
+                        function will be processed by NNANSI,
+			allowing processing of ANSI escape sequences.
+			When false, processing will not occur. Some
+			programs will not work properly if set to true.
+
+98      Fast Scroll     When true (fast mode) the starting
+                        display location is changed for fast
+                        scrolling, which can cause problems for
+                        some programs. When false, the starting
+                        location does not change and the
+                        multi-page support is enabled.
+
+99      Graphic cursor  When true the cursor is displayed in
+                        graphic modes. Some programs produce ghost
+			cursors when set to true.
+
+Batch files are supplied to change attributes 97, 98, and 99.
+
+Note that the Fast Scroll attribute does not apply to the Monochrome
+Display Adapter (MDA). Also note that in older versions of
+NNANSI, and NANSI.SYS, the use of the ? character in the command
+was optional, and an = could be used instead. That is not true for
+this version. Because some Microsoft documentation claims that the
+= character can be used for Cursor Wrap, NNANSI still supports that
+bug.
+
+
+
+                  KEYBOARD REASSIGNMENT COMMAND
+
+This command is absent by default. You must recompile to enable
+this command. Use of this feature is not recommended.
+        
+NAME    DESCRIPTION             COMMAND
+IBMKKR  Keyboard Key Reassign   ESC[param;param;...;param p
+
+If no parameters are given, all keys are reset. This is not true
+for ANSI.SYS.
+
+The first parameter is the key to reassign. IBM function keys take
+the first two parameters, where the first parameter is 0.  The
+remaining parameters are the keystrokes to substitute. Extended keys
+are supported -- they have 224 as the first parameter and the scan
+code as the second. Unassigned extended characters are automatically
+mapped to their non-extended counterparts.  Normally a string is used
+rather than numeric arguments. See your DOS manual for the chart of
+keycodes.
+
+For example, to have F5 do a DIR command, you would execute
+
+ESC[0;63;"DIR";13p
+
+To restore the key to its original function, assign it its original codes:
+
+ESC[0;63;0;63p
+
+******************************THE END****************************

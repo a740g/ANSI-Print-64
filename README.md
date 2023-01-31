@@ -33,6 +33,9 @@ Sub PrintANSI (sANSI As String, nCPS As Long)
 - [Console Virtual Terminal Sequences](https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences) by Microsoft
 - [ANSI.SYS Documentation](https://learn.microsoft.com/en-us/previous-versions/tn-archive/cc722862(v=technet.10)) by Microsoft
 - [ANSI.SYS Documentation and Reference](http://www.roysac.com/learn/ansisys.html) by Carsten Cumbrowski
+- [ANSIPLUS Escape Sequences](http://www.sweger.com/ansiplus/EscSeq.html)
+- [NANSI.SYS Documentation](docs/nansi.txt)
+- [NNANSI.COM Documentation](docs/nnansi.txt)
 - [ANSI Color Codes](https://talyian.github.io/ansicolors/) by Jimmy Tang
 - [SAUCE – Standard Architecture for Universal Comment Extensions](https://www.acid.org/info/sauce/sauce.htm) by Olivier "Tasmaniac" Reubens / ACiD
 - [ANSI Music](docs/ansimtech.txt) by unknown
