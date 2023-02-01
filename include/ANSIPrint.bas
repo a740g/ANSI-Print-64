@@ -325,8 +325,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                                             Case 38 ' set 8-bit 256 or 24-bit RGB foreground color
                                                 z = argIndex - x ' get the number of arguments remaining
 
-                                                If z < 1 Then Error ERROR_CANNOT_CONTINUE ' we need one more args to check what kind of extended color we have to use
-
                                                 If arg(x + 1) = 2 And z >= 4 Then ' 32bpp color with 5 arguments
                                                     fc = RGB32(arg(x + 2) And &HFF, arg(x + 3) And &HFF, arg(x + 4) And &HFF)
                                                     SetTextCanvasColor fc, isInvert, FALSE
@@ -355,8 +353,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
                                             Case 48 ' set 8-bit 256 or 24-bit RGB background color
                                                 z = argIndex - x ' get the number of arguments remaining
-
-                                                If z < 1 Then Error ERROR_CANNOT_CONTINUE ' we need one more args to check what kind of extended color we have to use
 
                                                 If arg(x + 1) = 2 And z >= 4 Then ' 32bpp color with 5 arguments
                                                     bc = RGB32(arg(x + 2) And &HFF, arg(x + 3) And &HFF, arg(x + 4) And &HFF)
