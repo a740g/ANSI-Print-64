@@ -6,6 +6,7 @@
 '   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#screen-colors
 '   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#window-title
 '   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#soft-reset
+'   https://github.com/a740g/ANSIPrint/blob/master/docs/ansimtech.txt
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,19 +24,17 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     'Screen NewImage(8 * 80, 16 * 60, 32)
     'Font 8
 
-    'PrintANSI Chr$(ANSI_ESC) + "[35;46mHello world!" + Chr$(ANSI_ESC) + "[m" + Chr$(27) + "[Hmore text", -1
-
     'Do
     '    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Art Files")
     '    If Not FileExists(ansFile) Then Exit Do
 
     '    Dim fh As Long: fh = FreeFile
     '    Open ansFile For Binary Access Read As fh
+    '    Color DarkGray, Black
+    '    Cls
     '    PrintANSI Input$(LOF(fh), fh), -1 ' put a -ve number here for superfast rendering
     '    Close fh
     '    Title "Press any key to open another file...": Sleep 3600
-    '    Color DarkGray, Black
-    '    Cls
     'Loop
 
     'End
@@ -59,8 +58,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Unsigned Long fc, bc ' foreground and background colors
         Dim As Long savedDECX, savedDECY ' DEC saved cursor position
         Dim As Long savedSCOX, savedSCOY ' SCO saved cursor position
-        ' The variables below are used to save various things that are restored before the function exits
-        Dim As Long oldControlChr, oldPrintMode
+        Dim As Long oldControlChr, oldPrintMode ' these are saved before we change them and are restored before the function exits
 
         ' We only support rendering to 32bpp images
         If PixelSize < 4 Then Error ERROR_FEATURE_UNAVAILABLE
@@ -79,15 +77,17 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         PrintMode FillBackground ' set the print mode to fill the character background
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
 
-        ' Save the current cursor position
+        ' Get the current cursor position
         savedDECX = Pos(0)
         savedDECY = CsrLin
         savedSCOX = savedDECX
         savedSCOY = savedDECY
 
-        ' Get the current foreground and background color
-        fc = DefaultColor
-        bc = BackgroundColor
+        ' Reset the foreground and background color
+        fc = ANSI_DEFAULT_COLOR_FOREGROUND
+        SetTextCanvasColor fc, FALSE, TRUE
+        bc = ANSI_DEFAULT_COLOR_BACKGROUND
+        SetTextCanvasColor bc, TRUE, TRUE
 
         state = ANSI_STATE_TEXT ' we will start parsing regular text by default
 
