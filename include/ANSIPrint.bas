@@ -34,6 +34,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     '    PrintANSI Input$(LOF(fh), fh), -1 ' put a -ve number here for superfast rendering
     '    Close fh
     '    Title "Press any key to open another file...": Sleep 3600
+    '    Color DarkGray, Black
     '    Cls
     'Loop
 
@@ -60,7 +61,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long savedSCOX, savedSCOY ' SCO saved cursor position
         ' The variables below are used to save various things that are restored before the function exits
         Dim As Long oldControlChr, oldPrintMode
-        Dim As Unsigned Long oldForegroundColor, oldBackgroundColor
 
         ' We only support rendering to 32bpp images
         If PixelSize < 4 Then Error ERROR_FEATURE_UNAVAILABLE
@@ -74,8 +74,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ' Save some stuff that we might be changing
         oldPrintMode = PrintMode
         oldControlChr = ControlChr
-        oldForegroundColor = DefaultColor
-        oldBackgroundColor = BackgroundColor
 
         ' Now we are free to change whatever we saved above
         PrintMode FillBackground ' set the print mode to fill the character background
@@ -87,11 +85,9 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         savedSCOX = savedDECX
         savedSCOY = savedDECY
 
-        ' Reset the foreground and background color
-        fc = ANSI_DEFAULT_COLOR_FOREGROUND
-        SetTextCanvasColor fc, FALSE, TRUE
-        bc = ANSI_DEFAULT_COLOR_BACKGROUND
-        SetTextCanvasColor bc, TRUE, TRUE
+        ' Get the current foreground and background color
+        fc = DefaultColor
+        bc = BackgroundColor
 
         state = ANSI_STATE_TEXT ' we will start parsing regular text by default
 
@@ -129,6 +125,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
                         Case Else ' print the character
                             Print Chr$(ch);
+                            If nCPS > 0 Then Limit nCPS ' limit the loop speed if char/sec is a positive value
 
                     End Select
 
@@ -138,6 +135,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                             ControlChr Off
                             Print Chr$(ch); ' print escaped ESC character
                             ControlChr On
+                            If nCPS > 0 Then Limit nCPS ' limit the loop speed if char/sec is a positive value
                             state = ANSI_STATE_TEXT
 
                         Case ANSI_ESC_DECSC ' Save Cursor Position in Memory
@@ -537,8 +535,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                     Error ERROR_CANNOT_CONTINUE
 
             End Select
-
-            If nCPS > 0 Then Limit nCPS ' limit the loop speed if char/sec is a positive value
         Next
 
         ' Set stuff the way we found them
@@ -547,8 +543,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Else
             ControlChr On
         End If
-
-        Color oldForegroundColor, oldBackgroundColor
 
         Select Case oldPrintMode
             Case 1
@@ -629,14 +623,14 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Long c, i, r, g, b
 
         ' The first 16 are the standard 16 ANSI colors (VGA style)
-        ANSIColorLUT(0) = RGB32(0, 0, 0) '  0 black
+        ANSIColorLUT(0) = Black ' exact match
         ANSIColorLUT(1) = RGB32(170, 0, 0) '  1 red
         ANSIColorLUT(2) = RGB32(0, 170, 0) '  2 green
         ANSIColorLUT(3) = RGB32(170, 85, 0) '  3 yellow (not really yellow; oh well)
         ANSIColorLUT(4) = RGB32(0, 0, 170) '  4 blue
         ANSIColorLUT(5) = RGB32(170, 0, 170) '  5 magenta
         ANSIColorLUT(6) = RGB32(0, 170, 170) '  6 cyan
-        ANSIColorLUT(7) = RGB32(170, 170, 170) '  7 white (light grey)
+        ANSIColorLUT(7) = DarkGray ' white (well VGA defines this as (170, 170, 170); darkgray is (169, 169, 169); so we are super close)
         ANSIColorLUT(8) = RGB32(85, 85, 85) '  8 grey
         ANSIColorLUT(9) = RGB32(255, 85, 85) '  9 bright red
         ANSIColorLUT(10) = RGB32(85, 255, 85) ' 10 bright green
@@ -644,7 +638,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ANSIColorLUT(12) = RGB32(85, 85, 255) ' 12 bright blue
         ANSIColorLUT(13) = RGB32(255, 85, 255) ' 13 bright magenta
         ANSIColorLUT(14) = RGB32(85, 255, 255) ' 14 bright cyan
-        ANSIColorLUT(15) = RGB32(255, 255, 255) ' 15 bright white
+        ANSIColorLUT(15) = White ' exact match
 
         ' The next 216 colors (16-231) are formed by a 3bpc RGB value offset by 16, packed into a single value
         For c = 16 To 231
