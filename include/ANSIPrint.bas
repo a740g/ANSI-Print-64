@@ -21,8 +21,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     ' Small test code for debugging the library
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     '$Debug
-    'Screen NewImage(8 * 80, 16 * 60, 32)
-    'Font 8
+    'Screen NewImage(8 * 80, 16 * 25, 32)
+    'Font 16
 
     'Do
     '    Dim ansFile As String: ansFile = OpenFileDialog$("Open", "", "*.ans|*.asc|*.diz|*.nfo|*.txt", "ANSI Art Files")
@@ -58,7 +58,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         Dim As Unsigned Long fc, bc ' foreground and background colors
         Dim As Long savedDECX, savedDECY ' DEC saved cursor position
         Dim As Long savedSCOX, savedSCOY ' SCO saved cursor position
-        Dim As Long oldControlChr, oldPrintMode ' these are saved before we change them and are restored before the function exits
+        Dim As Long oldControlChr ' to save old ContolChr
 
         ' We only support rendering to 32bpp images
         If PixelSize < 4 Then Error ERROR_FEATURE_UNAVAILABLE
@@ -69,12 +69,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
             colorLUTInitialized = TRUE
         End If
 
-        ' Save some stuff that we might be changing
-        oldPrintMode = PrintMode
+        ' Save the old ControlChr state
         oldControlChr = ControlChr
-
-        ' Now we are free to change whatever we saved above
-        PrintMode FillBackground ' set the print mode to fill the character background
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
 
         ' Get the current cursor position
@@ -537,21 +533,12 @@ $If ANSIPRINT_BAS = UNDEFINED Then
             End Select
         Next
 
-        ' Set stuff the way we found them
+        ' Set ControlChr the way we found it
         If oldControlChr Then
             ControlChr Off
         Else
             ControlChr On
         End If
-
-        Select Case oldPrintMode
-            Case 1
-                PrintMode KeepBackground
-            Case 2
-                PrintMode OnlyBackground
-            Case 3
-                PrintMode FillBackground
-        End Select
     End Sub
 
 
