@@ -208,6 +208,8 @@ Function DoFileDraw%% (fileName As String)
     PrintANSI Input$(LOF(fh), fh), ANSICPS
     Close fh
 
+    Title APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPath(fileName)
+
     Dim As Long k
 
     Do
@@ -233,21 +235,19 @@ End Function
 ' Processes the command line one file at a time
 Function DoCommandLine%%
     Dim i As Unsigned Long
-    Dim event As Unsigned Byte
-
-    event = EVENT_NONE
+    Dim e As Byte: e = EVENT_NONE
 
     If (Command$(1) = "/?" Or Command$(1) = "-?") Then
         MessageBox APP_NAME, APP_NAME + Chr$(13) + "Syntax: ANSIPrintDemo [ansi_art.ans]" + Chr$(13) + "    /?: Shows this message" + String$(2, 13) + "Copyright (c) 2023, Samuel Gomes" + String$(2, 13) + "https://github.com/a740g/", "info"
-        DoCommandLine = EVENT_QUIT
+        e = EVENT_QUIT
     Else
         For i = 1 To CommandCount
-            event = DoFileDraw(Command$(i))
-            If event <> EVENT_DRAW Then Exit For
+            e = DoFileDraw(Command$(i))
+            If e <> EVENT_DRAW Then Exit For
         Next
     End If
 
-    DoCommandLine = event
+    DoCommandLine = e
 End Function
 
 
@@ -256,9 +256,7 @@ Function DoDroppedFiles%%
     ' Make a copy of the dropped file and clear the list
     ReDim fileNames(1 To TotalDroppedFiles) As String
     Dim i As Unsigned Long
-    Dim event As Unsigned Byte
-
-    event = EVENT_NONE
+    Dim e As Byte: e = EVENT_NONE
 
     For i = 1 To TotalDroppedFiles
         fileNames(i) = DroppedFile(i)
@@ -267,20 +265,18 @@ Function DoDroppedFiles%%
 
     ' Now play the dropped file one at a time
     For i = LBound(fileNames) To UBound(fileNames)
-        event = DoFileDraw(fileNames(i))
-        If event <> EVENT_DRAW Then Exit For
+        e = DoFileDraw(fileNames(i))
+        If e <> EVENT_DRAW Then Exit For
     Next
 
-    DoDroppedFiles = event
+    DoDroppedFiles = e
 End Function
 
 
 ' Processes a list of files selected by the user
 Function DoSelectedFiles%%
     Dim ofdList As String
-    Dim event As Unsigned Byte
-
-    event = EVENT_NONE
+    Dim e As Byte: e = EVENT_NONE
 
     ofdList = OpenFileDialog$(APP_NAME, NULLSTRING, "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
     If ofdList = NULLSTRING Then Exit Function
@@ -291,11 +287,11 @@ Function DoSelectedFiles%%
     j = ParseOpenFileDialogList(ofdList, fileNames())
 
     For i = 0 To j - 1
-        event = DoFileDraw(fileNames(i))
-        If event <> EVENT_DRAW Then Exit For
+        e = DoFileDraw(fileNames(i))
+        If e <> EVENT_DRAW Then Exit For
     Next
 
-    DoSelectedFiles = event
+    DoSelectedFiles = e
 End Function
 
 
