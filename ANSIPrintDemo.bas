@@ -94,7 +94,7 @@ Sub SetupCanvas
         Canvas = 0
     End If
 
-    Canvas = NewImage(8 * CanvasWidth, CanvasFont * CanvasHeight, 32) ' 8 is the built-in font width
+    Canvas = NewImage(8 * CanvasWidth, CanvasFont * CanvasHeight * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
     Screen Canvas ' make the canvas the default screen
     Font CanvasFont ' set the current font
     Locate , , FALSE ' turn cursor off
