@@ -101,17 +101,35 @@ $If ANSIPRINT_BI = UNDEFINED Then
     Const ANSI_STATE_BEGIN = 1 ' when beginning an escape sequence
     Const ANSI_STATE_SEQUENCE = 2 ' when parsing a control sequence introducer
     Const ANSI_STATE_END = 3 ' when the end of the character stream has been reached
-    ' Parser limits
-    Const ANSI_ARG_COUNT = 10 ' max number of arguments that we can parse at a time
     ' Some defaults
     Const ANSI_DEFAULT_COLOR_FOREGROUND = 7
     Const ANSI_DEFAULT_COLOR_BACKGROUND = 0
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
+    ' USER DEFINED TYPES
+    '-----------------------------------------------------------------------------------------------------------------------------------------------------------
+    Type ANSIEmulatorType
+        isInitialized As Long ' was the library initialized?
+        state As Long ' the current parser state
+        argIndex As Long ' the current CSI argument index & count; 0 means no arguments
+        fC As Unsigned Long ' foreground color
+        bC As Unsigned Long ' background color
+        isBold As Long ' text attributes - high intensity bg color
+        isBlink As Long ' text attributes - we make this high intensity as well
+        isInvert As Long ' text attributes - inverted colors (fg <> bg)
+        posDEC As Vector2DType ' DEC saved cursor position
+        posSCO As Vector2DType ' SCO saved cursor position
+        CPS As Long ' characters / second
+    End Type
+    '-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     ' GLOBAL VARIABLES
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
-    Dim ANSIColorLUT(0 To 255) As Unsigned Long ' this table is used to get the RGB for legacy ANSI colors
+    Dim __ANSIEmu As ANSIEmulatorType ' emulator state
+    Dim __ANSIColorLUT(0 To 255) As Unsigned Long ' this table is used to get the RGB for legacy ANSI colors
+    ReDim __ANSIArg(1 To 1) As Long ' CSI dynamic argument list
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------

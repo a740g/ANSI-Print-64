@@ -112,7 +112,7 @@ Function DoWelcomeScreen%%
     Dim As String buffer: buffer = LoadResource
 
     ' Render the ANSI art
-    PrintANSI buffer, -1
+    PrintANSI buffer
 
     ' Get into a loop and check for input
     Dim k As Long, e As Byte
@@ -205,7 +205,9 @@ Function DoFileDraw%% (fileName As String)
     Open fileName For Binary Access Read As fh
     Color DarkGray, Black ' reset the foregound and background colors
     Cls ' this will reset the cursor to 1, 1
-    PrintANSI Input$(LOF(fh), fh), ANSICPS
+    ResetANSIEmulator
+    SetANSIEmulationSpeed ANSICPS
+    PrintANSIString Input$(LOF(fh), fh)
     Close fh
 
     Title APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPath(fileName)
