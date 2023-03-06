@@ -1,16 +1,14 @@
 
-
-
-
-
                          NANSI.SYS
              An Enhanced MS-DOS Console Driver
-                Version 3.4   November 1991
-            Documentation updated February 1999
-           http://alumni.caltech.edu/~dank/nansi/
+         Version 4.0a 11/2003, 4.0b 2006 4.0c/d 2007
+                  http://kegel.com/nansi/
+
 
 
 1.  Introduction - Who should use NANSI.SYS
+
+
 
 NANSI.SYS is a console device driver for MS-DOS  computers.   It  exe-
 cutes the same ANSI cursor control sequences as does the standard con-
@@ -50,27 +48,30 @@ display it with COPY /b foo.txt con: with NANSI.SYS installed- it will
 go by very quickly.  This speed increase occurs even when running in a
 window in Microsoft Windows 3.0.
 
+
+
 2.  Compatibility
+
+
 
 NANSI.SYS has been tested on IBM PC/XT, /AT,  and  PS/2  systems.   It
 should  run  on any CGA, MDA, EGA, or VGA compatible video card. It is
 compatible with Microsoft Windows 3.0.  Unlike  many  display  speedup
 progams,  it  does not use wierd hardware scrolling tricks, and there-
 fore remains completely compatible with programs that  write  directly
-to the screen.
+to the screen. That way, you will hardly ever need the /R switch  even
+for screen reader software (which reads  the screen, e.g.  for speaker
+output or Braille display output). Compatibility to multitaskers  like
+DESQview should be given in /R /B mode: If not, please *report* (then,
+int 10.fe "query alternate video RAM pointer es:di" will be used,  and
+maybe int 10.ff "video RAM change notification" will be sent -  "RSIS"
+feature will be added to NANSI, in other words!)
 
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 2 -
 
 
 3.  Copyright status
+
+
 
 This program and documentation is Copyright 1986, 1991  Daniel  Kegel.
 The  executable  program  and  its documentation may be freely distri-
@@ -92,25 +93,37 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 or look on the web at http://www.gnu.org/copyleft/gpl.html.
 
 Correspondence (in English, German, or French) should be
-directed to the author at dank@alumni.caltech.edu
+directed to the author at    dank (at) kegel.com
+
 
 
 4.  Version
 
+
+
 The version number can be found with the DOS command TYPE NANSI.SYS.
-This documentation is for version 3.3, created November 1991.
+This documentation is for version 4.0, created November 2003.
+
+
 
 5.  Installation and System Requirements
 
-NANSI.SYS version 3.3 is distributed as the archive NANSI33.ZIP,  with
+
+
+NANSI.SYS version 4.0 is distributed as the archive NANSI35.ZIP,  with
 the following contents:
 
-        NANSI.SYS - the device driver
-        NANSI.DOC - this documentation file
-        RAW.C     - how to set and clear RAW mode for faster screen output
-        RAW.H     - definitions for users of RAW.C
-        GC.ON     - text file which, when TYPEd, turns on the graphics cursor
+        NANSI.SYS    - the device driver
+        NANSI.DOC    - this documentation file
+	LICENSE.TXT  - GNU License (GPL): This now is open source freeware!
+        RAW.C        - how to set and clear RAW mode
+        RAW.H        - definitions for users of RAW.C
 
+	MAKEFILE     - use with "make" to compile NANSI
+	MAKEFILE.BAT - if you have no "make", use this to compile NANSI
+	NANSI*.ASM   - source code for NANSI. Compiles with MS MASM or the
+	               freeware version of Arrowsoft Assembler (ASM)
+	TOOLS.TXT    - hints about which compilers are possible
 
 NANSI.SYS requires MS-DOS version 2.0 or  higher,  and  uses  about  3
 kilobytes of system RAM.
@@ -122,17 +135,6 @@ For IBM VGA and Vega VGA cards, or if you don't know  (or  care)  what
 kind of card you have:
 
         DEVICE=NANSI.SYS
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 3 -
-
 
 For Paradise VGA Plus cards:
 
@@ -146,25 +148,59 @@ For VGA cards using the Trident Microsystems TVGA 8900:
 
         DEVICE=NANSI.SYS /t50 /t51 /t52 /t53 /t54 /t55 /t56 /t57 /t58 /t59 /t5A
 
+General syntax description:
+
+	DEVICE[HIGH]=NANSI.SYS [/K] [/C] [/X] [/S] [/Tnn] [/R] [/B|/Q] [/P]
+	
+In short ([/Q] means "optionally give the /Q switch"):
+/K "force 84 key keyboard style"	/X "extended key definitions"
+/S "safe mode - no key redefinitions"	/Tnn "mode nn is a text mode"
+/R "use BIOS (for some screen readers)"	/B "use BIOS for bell sound"
+/P "pass all unknown requests to CON"	/C "force 101+ key keyboard style"
+/Q "use no bell sound at all (quiet)"	/? show help
+
+
 
 6.  COMMAND-LINE OPTIONS
 
+6.0.  /?   : Help message.
 
-6.1.  /K   : force Nansi to use extended  keyboard  BIOS  calls  which
-sense F11 and F12
+Whenever Nansi encounters any option syntax error, it shows a short
+help message describing the supported options. You can for example
+give the option /? to make Nansi display this help message. While
+supporting /? is exotic for device drivers, it is useful for people
+who want to use Nansi instead of their old ANSI driver and fail to
+read the nansi.doc file in full detail ;-).
 
-When IBM introduced the extended keyboard with F11 and F12  keys,  and
-separated  the  numeric keypad from the arrow keys, it also introduced
-an extended way of reading the keyboard with BIOS.  The old way  still
-works, but doesn't recognize the extended keys.
+6.1.  /K   : force Nansi to use extended keyboard BIOS calls.
 
-Normally, Nansi tries to detect whether  the  extended  keyboard  BIOS
-calls  are available, and if so, uses them.  However, by giving the /k
-option you can force Nansi to use these calls even  if  Nansi  doesn't
-think  they  are there. This option is included for compatibility with
-ANSI.SYS.
+If you have an  101+ key keyboard  but it is not detected, NANSI would
+normally use the old style BIOS calls which discard  everything  which
+does not make sense on an 84 key keyboard. Use  /K  to force  NANSI to
+treat the keyboard as 101+ key keyboard.
 
-6.2.  /X   : tell Nansi to let you redefine the extended keys indepen-
+The 101+ key (AT) keyboard has F11 and F12 keys and it has blocks of
+cursor and similar keys, and a numeric keypad.
+
+WARNING: NANSI 3.x had a /K switch which ENABLED 101+ key  processing!
+The new syntax is /K to DISABLE 101+ key processing, as in FreeDOS  or
+MS DOS kernel "switches=/k".
+
+6.2.  /C   : force Nansi to use 84 key keyboard BIOS calls.
+
+If NANSI misdetects your 84 key keyboard as  101+ key keyboard,  or if
+your BIOS does not support the 101+ key style calls and NANSI fails to
+detect that, you can force NANSI to use only the old style  BIOS calls
+with this option. This causes  the BIOS to  discard  everything  which
+does not make sense on an 84 key keyboard. So you can also use this to
+"simulate" an 84 key keyboard while actually having an 101+ key one.
+
+WARNING: NANSI 3.x had a /K switch which ENABLED 101+ key  processing!
+The new syntax is /K to DISABLE 101+ key processing, as in FreeDOS  or
+MS DOS kernel "switches=/k".
+
+
+6.3.  /X   : tell Nansi to let you redefine the extended keys indepen-
 dantly
 
 IBM's extended keyboard BIOS calls added something  new:  they  return
@@ -176,7 +212,7 @@ ferently  during  keyboard  redefinition.   For  example, if you start
 Nansi with the /X option, you can define just the gray HOME key to say
 "dir/w" by sending the string ESC [224;71;"dir/w";13p
 
-6.3.  /S   : tell Nansi to be secure, and disable  keyboard  redefini-
+6.4.  /S   : tell Nansi to be secure, and disable  keyboard  redefini-
 tion
 
 Although it is nice to be able to redefine the  keyboard  with  escape
@@ -187,20 +223,11 @@ the /s option in config.sys.  For example,
 
         DEVICE=NANSI.SYS /s /t54 /t55 /t56 /t57
 
-This saves a few bytes of memory, too.
+This saves a few bytes of memory, too. With redefinitions disabled,
+less code has to stay in RAM and the buffer for ESC parsing and
+redefinition storage can be smaller if no redefinitions are used.
 
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 4 -
-
-
-6.4.  /Tnn : tell Nansi that video mode nn is a text mode
+6.5.  /Tnn : tell Nansi that video mode nn is a text mode
 
 No two VGA cards seem to have the same set of video mode  codes.   The
 same  mode number can indicate a graphics mode on one card, and a text
@@ -216,7 +243,6 @@ you would invoke Nansi as follows:
 
         DEVICE=NANSI.SYS /t0D /t50
 
-
 How to tell whether you need /t:
 If your board is in a non-IBM text video mode (for instance,  mode  50
 hex),  and  you  haven't added /t50 after NANSI.SYS in CONFIG.SYS, the
@@ -231,42 +257,40 @@ display  will  be  garbled  while in that mode.  Get back to normal by
 typing MODE CO80 or rebooting, and remove the offending /t option from
 config.sys.
 
+6.6.  /R : use the BIOS to write to screen only
 
+Other  ANSI  implementations  use  this switch to change the scrolling
+style to a more screen reading software compatible one. NANSI only has
+this switch to force all writes to screen to happen through BIOS,  but
+this  mode is much slower.  Basically  it is the  counterpart of /Tnn,
+and tells NANSI that all modes are "no textmodes". This  is useful  if
+you run DOS in a  multitasker  or another environment  which redirects
+only BIOS output but not direct screen  memory access  properly.  As a
+side effect, /R disables direct CRT controller programming to position
+the cursor or to resize it.
 
+6.7  /B : use the BIOS to make a beep sound
 
+If  your computer  has no PC-AT compatible internal  timer and speaker
+hardware, or if you want to redirect the beep (bell) output, use  this
+switch to force NANSI to use BIOS rather than direct  hardware  access
+for beeping.
 
+6.8  /P : pass all unknown requests to CON
 
+Some CON drivers offer extra functions. If you load NANSI after one of
+them, you can try this option to make NANSI pass all function requests
+that it cannot handle itself to the CON driver which predecedes NANSI.
 
+6.9  /Q : Do not make a beep sound
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 5 -
+Instead of the /B option, you can use the /B option to disable all
+sounds made for beep / bell character output. Works on all hardware.
 
 
 7.  ANSI Control Sequences
+
+
 
 While putting text up on the screen, NANSI.SYS keeps a lookout for the
 escape  character  (chr(27), known as ESC); this character signals the
@@ -308,30 +332,6 @@ tells  you  what  characters  make up the sequence, and LONG NAME is a
 long name for the sequence.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 6 -
-
-
 7.1.  Sequences dealing with Cursor Positioning
 
 7.1.1.  CUP: ESC[#;#H  Cursor Position
@@ -341,35 +341,29 @@ first parameter, y, specifies the row number; the second parameter, x,
 specifies the column number.  If no parameters are given,  the  cursor
 is moved to (1,1), the upper left corner of the screen.
 
-
 7.1.2.  HVP: ESC[#;#f  Horizontal and Vertical Position
 
 This is identical to Cursor Position.  Don't ask me why it exists.
-
 
 7.1.3.  CUU: ESC[#A    Cursor Up
 
 Moves the cursor up the given number of rows without changing its hor-
 izontal position.
 
-
 7.1.4.  CUD: ESC[#B    Cursor Down
 
 Moves the cursor down the given number of rows  without  changing  its
 horizontal position.
-
 
 7.1.5.  CUF: ESC[#C    Cursor Forward
 
 Moves the cursor right the given number of  columns  without  changing
 its vertical position.
 
-
 7.1.6.  CUB: ESC[#D    Cursor Backward
 
 Moves the cursor left the given number of columns without changing its
 vertical position.
-
 
 7.1.7.  DSR: ESC[#n    Device Status, Report!
 
@@ -378,25 +372,6 @@ a CPR (Cursor Position Report) sequence.
 
 Note: This sequence is not supported by the  ANSI.SYS  emulator  built
 into Microsoft Windows 1.x or 2.x.
-
-
-
-
-
-
-
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 7 -
-
 
 7.1.8.  CPR: ESC[#;#R  Cursor Position Report
 
@@ -438,30 +413,17 @@ position with the C language:
             getchar();  /* ignore trailing CR */
         #endif
 
-
 This can also be useful for sensing screen size.
-
 
 7.1.9.  SCP: ESC[s      Save Cursor Position
 
 Saves the cursor's X and Y locations in  an  internal  variable.   See
 RCP.
 
-
 7.1.10.  RCP: ESC[u    Restore Cursor Position
 
 Moves cursor to the position it held when the last  SCP  sequence  was
 received.
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 8 -
 
 
 7.2.  Sequences that Edit the Display
@@ -477,11 +439,9 @@ duces  these quirks.  (Version 2.2 of NANSI.SYS insisted on # being 2,
 and it caused compatibility problems with programs  that  ignored  the
 MS-DOS manual.  Sigh.)
 
-
 7.2.2.  EL: ESC[K    Erase in Line
 
 Deletes from the cursor to the end of the line.
-
 
 7.2.3.  IL: ESC[#L    Insert Lines
 
@@ -491,7 +451,6 @@ lines are lost.
 
 Note: This is not supported in ANSI.SYS.
 
-
 7.2.4.  DL: ESC[#M    Delete Lines
 
 The block of # lines at and below the cursor are  deleted;  all  lines
@@ -499,7 +458,6 @@ below  them  move up # lines to fill in the gap, leaving # blank lines
 at the bottom of the screen.  The cursor position is unchanged.
 
 Note: This is not supported in ANSI.SYS.
-
 
 7.2.5.  ICH: ESC[#@    Insert Characters
 
@@ -509,7 +467,6 @@ unchanged.  The rightmost # characters on the line are lost.
 
 Note: This is not supported in ANSI.SYS.
 
-
 7.2.6.  DCH: ESC[#P    Delete Characters
 
 The block of # characters at and  to  the  right  of  the  cursor  are
@@ -517,17 +474,6 @@ deleted;  all characters to the right of it move left # columns, leav-
 ing behind blank space.  The cursor position is unchanged.
 
 Note: This is not supported in ANSI.SYS.
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 9 -
 
 
 7.3.  Sequences that Set Modes
@@ -567,7 +513,6 @@ When /X is given, the gray Insert, Delete, Home, End, PageUp,  PageDn,
 and  arrow keys on an Extended keyboard can be redefined separately by
 using 224 rather than 0 as the initial byte.
 
-
 7.3.2.  SGR: ESC[#;#;...#m  Set Graphics Rendition
 
 The Set Graphics Rendition command is used to  select  foreground  and
@@ -582,19 +527,6 @@ they are executed in sequence, and the effects are cumulative.
             7      Reverse Video
             30-37  foreground black/red/green/yellow/blue/magenta/cyan/white
             40-47  background black/red/green/yellow/blue/magenta/cyan/white
-
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 10 -
-
 
 7.3.3.  SM: ESC[=nh  Set Video Mode
 
@@ -619,7 +551,6 @@ modes, the cursor is simulated with a small blob (^V).)
                 18              bitmap 640x480 4 bits/pixel
                 19              bitmap 320x200 8 bits/pixel
 
-
 Modes 0, 1, and 4-19 require a CGA, EGA or VGA.
 Modes 13-16 require an EGA or VGA.
 Modes 17-19 require a VGA.
@@ -632,35 +563,6 @@ then Set Mode 43.  For instance: ESC[=3h ESC[=43h.  To exit short line
 mode, set the desired 25-line text mode again.  On IBM VGA cards, this
 sequence gives you a 50 line screen.  NANSI.SYS ignores mode 43 unless
 there is an EGA or VGA on your computer.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 11 -
-
 
 7.3.4.  SM: ESC[?nh  Set Nonvideo Mode
 
@@ -682,53 +584,14 @@ ported is
             Mode Code           Value when reset
                 7               Cursor stops at end of line
 
-
 Resetting mode 7 tells the cursor to 'stick' at the end  of  the  line
 instead of wrapping to the next line.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 12 -
-
-
 8.  Background - What does a console driver do, and how?
+
+
 
 A console driver consists of subroutines which are called  by  MS-DOS.
 MS-DOS itself is mostly just subroutines which can be called by appli-
@@ -750,7 +613,10 @@ However,  NANSI.SYS  writes directly to the screen in text modes; this
 allows much faster operation.
 
 
+
 9.  How to Display Text Quickly
+
+
 
 Output to the screen via DOS is usually slow  because  characters  are
 sent  one-at-a-time  through  several layers of software.  Application
@@ -782,19 +648,19 @@ very  slow,  simply  because  IBM  did  a  bad job designing BIOS, and
 because ANSI.SYS was written with  total  disregard  for  performance.
 NANSI.SYS, on the other hand, was written by a performance fanatic.
 
+If you use  FreeDOS,  there are less device calls.  In general, if you
+use an "int29" / fast TTY driver for CON, the DOS kernel  will  bypass
+some layers of software for some more common calls. While MS DOS  uses
+BIOS functions 2 and 9 to position cursor and put characters,  FreeDOS
+only uses BIOS function 14, TTY output, right away. This is often  the
+faster way. Note that "speed up drivers" for MS DOS have no effect  on
+FreeDOS, nor the other way round, due to this difference.
 
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 13 -
 
 
 10.  NANSI and Microsoft Windows
+
+
 
 Microsoft Windows 1.x and 2.x allowed you to run command.com in a win-
 dow,  but did not give you access to NANSI.SYS.  Windows 3.0 gives you
@@ -809,14 +675,45 @@ ate scrolling is shown.  I suspect this  is  because  Windows  doesn't
 refresh the display until display memory hasn't been touched for a few
 milliseconds.
 
-11.  New in version 3.3 of NANSI.SYS
 
-Fixed bug that caused erratic behavior after ESC[p.  Bug  was  present
-in all prior versions of NANSI.
 
-Fixed a few typos in documentation.
+11.  Version differences
 
-12.  New in version 3.2 of NANSI.SYS
+
+
+11.1.  New in version 4.0 of NANSI.SYS (changes by Eric Auer)
+
+The new /B and /R flags now allow you to force using the BIOS to sound
+a beep and to put characters on screen respectively.
+
+The /K command line switch now works like the kernel SWITCHES=/K switch
+and a new /C command line switch does what the  old NANSI 3.x /K switch
+has done. See above.
+
+The new /P flag allows  you to pass  on unsupported  requests to  other
+CON drivers in the chain (improved in version 4.0a and 4.0b).
+
+Compiling with free Assemblers and linkers is now explicitly supported.
+Documentation got updated to reflect the changes between 3.3 and 4.0.
+
+Version 4.0c implements the int 2F control interface ANSI install check
+(return AL=FF for INT 2F calls with AX=1A00) and, for the fun of it,
+also functions 1a01 and 1a02 (get/set display info, misc. control).
+
+The /Q quiet bell (disable bell) option is also new in version 4.0c.
+
+Version 4.0d saves a few 100 bytes of RAM when the /S option is used.
+Version 4.0d also introduces the improved /? help message.
+
+11.2.  New in version 3.3 of NANSI.SYS
+
+Fixed bug that caused erratic behavior after ESC[p.  Bug was present in
+all prior versions of NANSI.
+
+Fixed a few typos in documentation. Changes between  3.3 and  3.4  are,
+alas, not documented. But 3.4 has been a popular release of NANSI.
+
+11.3.  New in version 3.2 of NANSI.SYS
 
 Can finally read F11 and F12!
 
@@ -830,7 +727,7 @@ independently of "old" cursor motion keys.
 Both of these switches are compatible with the switches  of  the  same
 name in ANSI.SYS.
 
-13.  New in version 3.1 of NANSI.SYS
+11.4.  New in version 3.1 of NANSI.SYS
 
 A new escape sequence has been added to enable and disable  the  simu-
 lated  cursor in graphics mode (see SET MODE 99).  The graphics cursor
@@ -848,19 +745,7 @@ is important if you want to use non-IBM text modes properly, as  Nansi
 treats  nonstandard  modes  as  graphics  by default, which results in
 slower display.
 
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 14 -
-
-
-14.  New in version 3.0 of NANSI.SYS
+11.5.  New in version 3.0 of NANSI.SYS
 
 Now obeys BIOS's idea of number of screen lines, when supported.
 
@@ -877,56 +762,9 @@ No longer assumes AH is zero upon entry to driver.
 
 
 
+12.  Limitations in the current version of NANSI.SYS
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          November 29, 1991
-
-
-
-
-
-                                - 15 -
-
-
-15.  Limitations in the current version of NANSI.SYS
 
 Video modes are specified in hexadecimal on the command line,  and  in
 decimal  in  escape  sequences.  This is a needless inconsistancy, but
@@ -941,12 +779,13 @@ prompt, typing
 
 displays "127".
 
-All parameter values must be between 0 and 255.
+All parameter values must be between 0 and 255  (in  escape sequences,
+ANSI is defined that way anyway.
 
 The maximum number of characters available for  keyboard  redefinition
 is  500.   Any  single  keyboard  redefinition escape sequence must be
 shorter than (500 - (total keyboard redefinition space already  used))
-bytes.
+bytes. If you use more redefinitions, NANSI might crash!
 
 Insert and delete character do not work in graphics modes.
 
@@ -954,35 +793,17 @@ Graphics mode writing is slow.  If this bothers you, try NNANSI, which
 is someone else's modification of NANSI v2.2 to attack just this prob-
 lem.
 
-Does not support erase-to-end-of-screen and other useful functions.
+Does not support erase-to-end-of-screen and other useful functions. **
 
 Nansi determines whether the BIOS number-of-screen-lines  variable  is
-supported by checking for an EGA card.  There might be a better way.
+supported by checking for an EGA card. There might be a better way for
+users of "older than EGA" cards that support other than 25 lines  - if
+such cards exist.
 
 Nansi only checks for an EGA or VGA card at startup time.  If you have
 two  video  cards  installed, and one shows more text lines per screen
 than the other, AND you switch between the  cards  without  rebooting,
-Nansi could conceivably become confused about the number of text lines
-on the screen.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          November 29, 1991
+Nansi could CONCEIVABLY become confused about the number of text lines
+on the screen. NANSI 3x can update the line count automatically later!
 
 
