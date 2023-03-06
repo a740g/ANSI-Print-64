@@ -31,7 +31,7 @@ Sub InitializeANSIEmulator
 Sub ResetANSIEmulator
 Sub SetANSIEmulationSpeed (nCPS As Long)
 Function PrintANSICharacter& (ch As Unsigned Byte)
-Sub PrintANSIString (s As String)
+Function PrintANSIString& (s As String)
 
 ' Library support functions
 Sub SetANSICanvasColor (c As Unsigned Long, isBackground As Long, isLegacy As Long)

@@ -94,7 +94,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
             __ANSIColorLUT(c) = RGB32(g, g, g)
         Next
 
-        ReDim __ANSIArg(1 To 1) As Long ' reset the CSI arg list
+        ReDim __ANSIArg(1 To UBound(__ANSIArg)) As Long ' reset the CSI arg list
 
         __ANSIEmu.state = ANSI_STATE_TEXT ' we will start parsing regular text by default
         __ANSIEmu.argIndex = 0 ' reset argument index
@@ -163,10 +163,10 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                         x = Pos(0) - 1
                         If x > 0 Then Locate , x ' move to the left only if we are not on the edge
 
-                    Case ANSI_LF ' handle Line Feed because QB64 screws this up and moves the cursor to the beginning of the next line
-                        x = Pos(0) ' save old x pos
-                        Print Chr$(ch); ' use QB64 to handle the LF and then correct the mistake
-                        Locate , x ' set the cursor to the old x pos
+                        'Case ANSI_LF ' handle Line Feed because QB64 screws this up and moves the cursor to the beginning of the next line
+                        '    x = Pos(0) ' save old x pos
+                        '    Print Chr$(ch); ' use QB64 to handle the LF and then correct the mistake
+                        '    Locate , x ' set the cursor to the old x pos
 
                     Case ANSI_FF ' handle Form Feed - because QB64 does not (even with ControlChr On)
                         Locate 1, 1
@@ -586,7 +586,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
                 End Select
 
             Case ANSI_STATE_END ' end of the stream has been reached
-                ResetANSIEmulator ' reset the emulator
                 PrintANSICharacter& = FALSE ' tell the caller the we should stop processing the rest of the stream
                 Exit Function ' and then leave
 
@@ -599,12 +598,18 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
     ' Processes the whole string instead of a character like PrintANSICharacter()
     ' This simply wraps PrintANSICharacter()
-    Sub PrintANSIString (s As String)
+    Function PrintANSIString& (s As String)
         Dim As Long i
+
+        PrintANSIString = TRUE
+
         For i = 1 To Len(s)
-            If Not PrintANSICharacter(Asc(s, i)) Then Exit For
+            If Not PrintANSICharacter(Asc(s, i)) Then
+                PrintANSIString = FALSE ' signal end of stream
+                Exit Function
+            End If
         Next
-    End Sub
+    End Function
 
 
     ' A simple routine that wraps pretty much the whole library
@@ -616,8 +621,9 @@ $If ANSIPRINT_BAS = UNDEFINED Then
         ' Save the old ControlChr state
         oldControlChr = ControlChr
 
-        ResetANSIEmulator ' reset and initialize the library
-        PrintANSIString sANSI
+        ResetANSIEmulator ' reset the emulator
+
+        Dim dummy As Long: dummy = PrintANSIString(sANSI) ' print the ANSI string and ignore the return value
 
         ' Set ControlChr the way we found it
         If oldControlChr Then

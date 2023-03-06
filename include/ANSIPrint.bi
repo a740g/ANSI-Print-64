@@ -104,6 +104,7 @@ $If ANSIPRINT_BI = UNDEFINED Then
     ' Some defaults
     Const ANSI_DEFAULT_COLOR_FOREGROUND = 7
     Const ANSI_DEFAULT_COLOR_BACKGROUND = 0
+    Const ANSI_ARG_COUNT = 10 ' number of argument slots that we'll start with
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -129,7 +130,7 @@ $If ANSIPRINT_BI = UNDEFINED Then
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     Dim __ANSIEmu As ANSIEmulatorType ' emulator state
     Dim __ANSIColorLUT(0 To 255) As Unsigned Long ' this table is used to get the RGB for legacy ANSI colors
-    ReDim __ANSIArg(1 To 1) As Long ' CSI dynamic argument list
+    ReDim __ANSIArg(1 To ANSI_ARG_COUNT) As Long ' CSI dynamic argument list
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -203,11 +203,13 @@ Function DoFileDraw%% (fileName As String)
 
     Dim fh As Long: fh = FreeFile
     Open fileName For Binary Access Read As fh
+
     Color DarkGray, Black ' reset the foregound and background colors
     Cls ' this will reset the cursor to 1, 1
     ResetANSIEmulator
     SetANSIEmulationSpeed ANSICPS
-    PrintANSIString Input$(LOF(fh), fh)
+    Dim dummy As Long: dummy = PrintANSIString(Input$(LOF(fh), fh)) ' print and ignore return value
+
     Close fh
 
     Title APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPath(fileName)
