@@ -44,7 +44,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
     ' FUNCTIONS & SUBROUTINES
     '-----------------------------------------------------------------------------------------------------------------------------------------------------------
-    ' Initializes library global UDVs and tables and then sets the init flag
+    ' Initializes library global variables and tables and then sets the init flag to true
     Sub InitializeANSIEmulator
         Shared __ANSIEmu As ANSIEmulatorType
         Shared __ANSIColorLUT() As Unsigned Long
@@ -133,7 +133,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
 
     ' Sets the emulation speed
-    ' nCPS - characters / second (bigger numbers means faster; -ve number to disable)
+    ' nCPS - characters / second (bigger numbers means faster; <= 0 to disable)
     Sub SetANSIEmulationSpeed (nCPS As Long)
         Shared __ANSIEmu As ANSIEmulatorType
 
@@ -597,7 +597,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     End Function
 
 
-    ' Prcocess the whole string instead of a character like PrintANSICharacter()
+    ' Processes the whole string instead of a character like PrintANSICharacter()
     ' This simply wraps PrintANSICharacter()
     Sub PrintANSIString (s As String)
         Dim As Long i
@@ -608,7 +608,8 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
 
     ' A simple routine that wraps pretty much the whole library
-    ' It will do the setup and then call the approprite functions to render the ANSI string
+    ' It will reset the library, do the setup and then render the whole ANSI string in one go
+    ' ControlChr is properly restored
     Sub PrintANSI (sANSI As String)
         Dim As Long oldControlChr ' to save old ContolChr
 
@@ -661,7 +662,7 @@ $If ANSIPRINT_BAS = UNDEFINED Then
     End Function
 
 
-    ' Clears a given portion of screen without disturbing the cursor location and screen colors
+    ' Clears a given portion of screen without disturbing the cursor location and colors
     Sub ClearANSICanvasArea (l As Long, t As Long, r As Long, b As Long)
         Dim As Long i, w, x, y
         Dim As Unsigned Long fc, bc
