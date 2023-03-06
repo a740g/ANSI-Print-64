@@ -54,29 +54,6 @@ $If ANSIPRINT_BAS = UNDEFINED Then
 
         If PixelSize < 4 Then Error ERROR_FEATURE_UNAVAILABLE ' we only support rendering to 32bpp images
 
-        ReDim __ANSIArg(1 To 1) As Long ' reset the CSI arg list
-
-        __ANSIEmu.state = ANSI_STATE_TEXT ' we will start parsing regular text by default
-        __ANSIEmu.argIndex = 0 ' reset argument index
-
-        ' Reset the foreground and background color
-        __ANSIEmu.fC = ANSI_DEFAULT_COLOR_FOREGROUND
-        SetANSICanvasColor __ANSIEmu.fC, FALSE, TRUE
-        __ANSIEmu.bC = ANSI_DEFAULT_COLOR_BACKGROUND
-        SetANSICanvasColor __ANSIEmu.bC, TRUE, TRUE
-
-        ' Reset text attributes
-        __ANSIEmu.isBold = FALSE
-        __ANSIEmu.isBlink = FALSE
-        __ANSIEmu.isInvert = FALSE
-
-        ' Get the current cursor position
-        __ANSIEmu.posDEC.x = Pos(0)
-        __ANSIEmu.posDEC.y = CsrLin
-        __ANSIEmu.posSCO = __ANSIEmu.posDEC
-
-        __ANSIEmu.CPS = 0 ' disable any speed control
-
         Dim As Long c, i, r, g, b
 
         ' The first 16 are the standard 16 ANSI colors (VGA style)
@@ -116,6 +93,29 @@ $If ANSIPRINT_BAS = UNDEFINED Then
             g = (2056 + 2570 * (c - 232)) \ 256
             __ANSIColorLUT(c) = RGB32(g, g, g)
         Next
+
+        ReDim __ANSIArg(1 To 1) As Long ' reset the CSI arg list
+
+        __ANSIEmu.state = ANSI_STATE_TEXT ' we will start parsing regular text by default
+        __ANSIEmu.argIndex = 0 ' reset argument index
+
+        ' Reset the foreground and background color
+        __ANSIEmu.fC = ANSI_DEFAULT_COLOR_FOREGROUND
+        SetANSICanvasColor __ANSIEmu.fC, FALSE, TRUE
+        __ANSIEmu.bC = ANSI_DEFAULT_COLOR_BACKGROUND
+        SetANSICanvasColor __ANSIEmu.bC, TRUE, TRUE
+
+        ' Reset text attributes
+        __ANSIEmu.isBold = FALSE
+        __ANSIEmu.isBlink = FALSE
+        __ANSIEmu.isInvert = FALSE
+
+        ' Get the current cursor position
+        __ANSIEmu.posDEC.x = Pos(0)
+        __ANSIEmu.posDEC.y = CsrLin
+        __ANSIEmu.posSCO = __ANSIEmu.posDEC
+
+        __ANSIEmu.CPS = 0 ' disable any speed control
 
         ControlChr On ' get assist from QB64's control character handling (only for tabs; we are pretty much doing the rest ourselves)
 
