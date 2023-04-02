@@ -6,15 +6,33 @@
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-'$Include:'include/FileOperations.bi'
+'$Include:'include/CRTLib.bi'
+'$Include:'include/FileOps.bi'
 '$Include:'include/Base64.bi'
 '$Include:'include/ANSIPrint.bi'
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+'-----------------------------------------------------------------------------------------------------------------------
+' METACOMMANDS
+'-----------------------------------------------------------------------------------------------------------------------
+$ExeIcon:'./ANSIPrint64.ico'
+$VersionInfo:CompanyName=Samuel Gomes
+$VersionInfo:FileDescription=ANSI Print 64 executable
+$VersionInfo:InternalName=ANSIPrint64
+$VersionInfo:LegalCopyright=Copyright (c) 2023, Samuel Gomes
+$VersionInfo:LegalTrademarks=All trademarks are property of their respective owners
+$VersionInfo:OriginalFilename=ANSIPrint64.exe
+$VersionInfo:ProductName=ANSI Print 64
+$VersionInfo:Web=https://github.com/a740g
+$VersionInfo:Comments=https://github.com/a740g
+$VersionInfo:FILEVERSION#=1,3,5,0
+$VersionInfo:PRODUCTVERSION#=1,3,5,0
+'-----------------------------------------------------------------------------------------------------------------------
+
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ' CONSTANTS
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-Const APP_NAME = "ANSIPrint Demo"
+Const APP_NAME = "ANSI Print 64"
 Const CANVAS_WIDTH_MAX = 240 ' max width of our text canvas
 Const CANVAS_WIDTH_MIN = 40
 Const CANVAS_HEIGHT_MAX = 67 ' max height of our text canvas
@@ -197,6 +215,12 @@ End Function
 Function DoFileDraw%% (fileName As String)
     DoFileDraw = EVENT_DRAW ' default event is to draw next file
 
+    If Not FileExists(fileName) Then
+        MessageBox APP_NAME, "Failed to load: " + fileName, "error"
+
+        Exit Function
+    End If
+
     SetupCanvas ' setup the canvas to draw on
 
     ' Set the app title to display the file name
@@ -239,17 +263,56 @@ End Function
 
 ' Processes the command line one file at a time
 Function DoCommandLine%%
-    Dim i As Unsigned Long
     Dim e As Byte: e = EVENT_NONE
 
-    If (Command$(1) = "/?" Or Command$(1) = "-?") Then
-        MessageBox APP_NAME, APP_NAME + Chr$(13) + "Syntax: ANSIPrintDemo [ansi_art.ans]" + Chr$(13) + "    /?: Shows this message" + String$(2, 13) + "Copyright (c) 2023, Samuel Gomes" + String$(2, 13) + "https://github.com/a740g/", "info"
+    If GetProgramArgumentIndex(KEY_QUESTION_MARK) > 0 Then
+        MessageBox APP_NAME, APP_NAME + Chr$(KEY_ENTER) + _
+            "Syntax: ANSIPrintDemo [ansi_art.ans]" + Chr$(KEY_ENTER) + _
+            "  -w x: Text canvas width" + Chr$(KEY_ENTER) + _
+            "  -h x: Text canvas height" + Chr$(KEY_ENTER) + _
+            "  -f x: Font height" + Chr$(KEY_ENTER) + _
+            "  -s x: Characters / second" + Chr$(KEY_ENTER) + _
+            "    -?: Shows this message" + String$(2, KEY_ENTER) + _
+            "Copyright (c) 2023, Samuel Gomes" + String$(2, KEY_ENTER) + _
+            "https://github.com/a740g/", "info"
+
         e = EVENT_QUIT
     Else
-        For i = 1 To CommandCount
-            e = DoFileDraw(Command$(i))
-            If e <> EVENT_DRAW Then Exit For
-        Next
+        Dim argName As Integer
+        Dim argIndex As Long: argIndex = 1 ' start with the first argument
+
+        Do
+            argName = ToLower(GetProgramArgument("whfs", argIndex))
+
+            Select Case argName
+                Case -1 ' no more arguments
+                    Exit Do
+
+                Case KEY_LOWER_W ' w
+                    argIndex = argIndex + 1 ' value at next index
+                    CanvasWidth = ClampLong(Val(Command$(argIndex)), CANVAS_WIDTH_MIN, CANVAS_WIDTH_MAX)
+
+                Case KEY_LOWER_H ' h
+                    argIndex = argIndex + 1 ' value at next index
+                    CanvasHeight = ClampLong(Val(Command$(argIndex)), CANVAS_HEIGHT_MIN, CANVAS_HEIGHT_MAX)
+
+                Case KEY_LOWER_F ' f
+                    argIndex = argIndex + 1 ' value at next index
+                    CanvasFont = Val(Command$(argIndex))
+                    If CanvasFont <> 8 Then CanvasFont = 16
+
+                Case KEY_LOWER_S ' s
+                    argIndex = argIndex + 1 ' value at next index
+                    ANSICPS = ClampLong(Val(Command$(argIndex)), ANSI_CPS_MIN, ANSI_CPS_MAX)
+
+                Case Else ' probably a file name
+                    e = DoFileDraw(Command$(argIndex))
+                    If e <> EVENT_DRAW Then Exit Do
+
+            End Select
+
+            argIndex = argIndex + 1 ' move to the next index
+        Loop Until argName = -1
     End If
 
     DoCommandLine = e
@@ -303,7 +366,9 @@ End Function
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ' MODULE FILES
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-'$Include:'include/FileOperations.bas'
+'$Include:'include/CRTLib.bas'
+'$Include:'include/ProgramArgs.bas'
+'$Include:'include/FileOps.bas'
 '$Include:'include/Base64.bas'
 '$Include:'include/ANSIPrint.bas'
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------

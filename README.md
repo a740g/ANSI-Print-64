@@ -1,4 +1,4 @@
-# QB64 ANSI ESCAPE SEQUENCE EMULATOR
+# ANSI ESCAPE SEQUENCE EMULATOR
 
 This is an [ANSI Escape Sequence](https://en.wikipedia.org/wiki/ANSI_escape_code) Emulator library written entirely in [QB64-PE](https://github.com/QB64-Phoenix-Edition/QB64pe).
 
@@ -6,7 +6,7 @@ This is an [ANSI Escape Sequence](https://en.wikipedia.org/wiki/ANSI_escape_code
 ![Screenshot](screenshots/screenshot2.png)
 ![Screenshot](screenshots/screenshot3.png)
 
-## Goals
+## GOALS
 
 - No dependency on third party libraries - OK
 - No OS specific code - OK
@@ -40,7 +40,7 @@ Function GetANSICanvasHeight&
 Sub ClearANSICanvasArea (l As Long, t As Long, r As Long, b As Long)
 ```
 
-## Bibliography
+## BIBLIOGRAPHY
 
 - [ANSI Escape Sequences](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797) by Christian Petersen
 - [ANSI escape code](https://en.wikipedia.org/wiki/ANSI_escape_code) from Wikipedia
@@ -56,16 +56,20 @@ Sub ClearANSICanvasArea (l As Long, t As Long, r As Long, b As Long)
 - [ANSI Music](docs/ansimtech.txt) by unknown
 - Various resources and information from <https://16colo.rs/>, <http://www.roysac.com/> and <https://int10h.org/>
 
-## What can I do with this?
+## WHAT CAN I DO WITH THIS?
 
 Anything you want! Use it in games, demos or for writing pretty text mode user interfaces and output.
 
-## Notes
+## NOTES
 
 - This requires the latest version of [QB64-PE](https://github.com/QB64-Phoenix-Edition/QB64pe)
 - The renderer is designed for QB64's 32BPP graphics Window. Legacy `SCREEN`s will not work
 - This is WIP. So, expect things to change and break. There are some bugs and quirks that needs to be worked out
 
-## Credits
+## CREDITS
 
-[Rick Christy (grymmjack)](https://github.com/grymmjack) for pointing out issues and helping me with invaluable resources. I've also used some of his artwork shamelessly for testing my library. 😁
+[Rick Christy (grymmjack)](https://github.com/grymmjack) for pointing out issues and helping me with invaluable resources. The include some of his artwork for testing.
+
+## ASSETS
+
+[Icon](https://www.iconarchive.com/artist/designcontest.html) by DesignContest
