@@ -4,7 +4,9 @@
 !*.*
 # Unignore all dirs
 !*/
+# Unignore include
+!include
 # Ignore all exe files
 *.exe
-# Ignore .vscode dir
+# Ignore VS Code stuff
 .vscode
