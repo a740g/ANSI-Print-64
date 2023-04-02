@@ -6,8 +6,9 @@
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-'$Include:'./include/ANSIPrint.bi'
-'$Include:'./include/Base64.bi'
+'$Include:'include/FileOperations.bi'
+'$Include:'include/Base64.bi'
+'$Include:'include/ANSIPrint.bi'
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,7 +200,7 @@ Function DoFileDraw%% (fileName As String)
     SetupCanvas ' setup the canvas to draw on
 
     ' Set the app title to display the file name
-    Title APP_NAME + " - " + GetFileNameFromPath(fileName)
+    Title APP_NAME + " - " + GetFileNameFromPathOrURL(fileName)
 
     Dim fh As Long: fh = FreeFile
     Open fileName For Binary Access Read As fh
@@ -212,7 +213,7 @@ Function DoFileDraw%% (fileName As String)
 
     Close fh
 
-    Title APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPath(fileName)
+    Title APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPathOrURL(fileName)
 
     Dim As Long k
 
@@ -297,59 +298,14 @@ Function DoSelectedFiles%%
 
     DoSelectedFiles = e
 End Function
-
-
-' This is a simple text parser that can take an input string from OpenFileDialog$ and spit out discrete filepaths in an array
-' Returns the number of strings parsed
-Function ParseOpenFileDialogList& (ofdList As String, ofdArray() As String)
-    Dim As Long p, c
-    Dim ts As String
-
-    ReDim ofdArray(0 To 0) As String
-    ts = ofdList
-
-    Do
-        p = InStr(ts, "|")
-
-        If p = 0 Then
-            ofdArray(c) = ts
-
-            ParseOpenFileDialogList& = c + 1
-            Exit Function
-        End If
-
-        ofdArray(c) = Left$(ts, p - 1)
-        ts = Mid$(ts, p + 1)
-
-        c = c + 1
-        ReDim Preserve ofdArray(0 To c) As String
-    Loop
-End Function
-
-
-' Gets the filename portion from a file path
-Function GetFileNameFromPath$ (pathName As String)
-    Dim i As Unsigned Long
-
-    ' Retrieve the position of the first / or \ in the parameter from the
-    For i = Len(pathName) To 1 Step -1
-        If Asc(pathName, i) = KEY_SLASH Or Asc(pathName, i) = KEY_BACKSLASH Then Exit For
-    Next
-
-    ' Return the full string if pathsep was not found
-    If i = 0 Then
-        GetFileNameFromPath = pathName
-    Else
-        GetFileNameFromPath = Right$(pathName, Len(pathName) - i)
-    End If
-End Function
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ' MODULE FILES
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
-'$Include:'./include/ANSIPrint.bas'
-'$Include:'./include/Base64.bas'
+'$Include:'include/FileOperations.bas'
+'$Include:'include/Base64.bas'
+'$Include:'include/ANSIPrint.bas'
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 '---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
