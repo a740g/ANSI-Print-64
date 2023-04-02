@@ -68,7 +68,7 @@ Anything you want! Use it in games, demos or for writing pretty text mode user i
 
 ## CREDITS
 
-[Rick Christy (grymmjack)](https://github.com/grymmjack) for pointing out issues and helping me with invaluable resources. The include some of his artwork for testing.
+[Rick Christy (grymmjack)](https://github.com/grymmjack) for pointing out issues and helping me with invaluable resources. This includes some of his artwork for testing.
 
 ## ASSETS
 
