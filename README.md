@@ -66,6 +66,8 @@ Anything you want! Use it in games, demos or for writing pretty text mode user i
 - This requires the latest version of [QB64-PE](https://github.com/QB64-Phoenix-Edition/QB64pe)
 - The renderer is designed for QB64's 32BPP graphics Window. Legacy `SCREEN`s will not work
 - This is WIP. So, expect things to change and break. There are some bugs and quirks that needs to be worked out
+- When you clone a repository that contains submodules, the submodules are not automatically cloned by default
+- You will need to use the `git submodule init` command followed by the `git submodule update` command to clone the submodules
 
 ## CREDITS
 
