@@ -1,16 +1,16 @@
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' QB64-PE ANSI emulator demo
 ' Copyright (c) 2023 Samuel Gomes
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' HEADER FILES
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 '$Include:'include/CRTLib.bi'
 '$Include:'include/FileOps.bi'
 '$Include:'include/Base64.bi'
 '$Include:'include/ANSIPrint.bi'
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' METACOMMANDS
@@ -29,9 +29,9 @@ $VersionInfo:FILEVERSION#=1,3,5,0
 $VersionInfo:PRODUCTVERSION#=1,3,5,0
 '-----------------------------------------------------------------------------------------------------------------------
 
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' CONSTANTS
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 Const APP_NAME = "ANSI Print 64"
 Const CANVAS_WIDTH_MAX = 240 ' max width of our text canvas
 Const CANVAS_WIDTH_MIN = 40
@@ -51,25 +51,24 @@ Const EVENT_CMDS = 2 ' process command line
 Const EVENT_LOAD = 3 ' user want to load files
 Const EVENT_DROP = 4 ' user dropped files
 Const EVENT_DRAW = 5 ' draw next art
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 
-'-----------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' GLOBAL VARIABLES
-'-----------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 Dim Shared Canvas As Long ' a handle to the canvas image
-Dim Shared CanvasWidth As Long ' the width of our window in characters
-Dim Shared CanvasHeight As Long ' the height of our window in characters
+Dim Shared CanvasSize As Vector2DType ' the width and height of our canvas in characters
 Dim Shared CanvasFont As Long ' just holds the font type (not a font handle!)
-Dim Shared ANSICPS As Long ' rendering speed
+Dim Shared ANSICPS As Long ' rendering speed (0 = no delay; 1 = 1 char / sec, 3600 = 3600 char / sec and so on)
 '-----------------------------------------------------------------------------------------------------
 
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ChDir StartDir$ ' Change to the directory specifed by the environment
 ANSICPS = ANSI_CPS_DEFAULT ' set default speed
-CanvasWidth = CANVAS_WIDTH_DEFAULT ' set default width
-CanvasHeight = CANVAS_HEIGHT_DEFAULT ' set default height
+CanvasSize.x = CANVAS_WIDTH_DEFAULT ' set default width
+CanvasSize.y = CANVAS_HEIGHT_DEFAULT ' set default height
 CanvasFont = CANVAS_FONT_DEFAULT ' set default font
 SetupCanvas ' set the initial window size
 Title APP_NAME + " " + OS$ ' Set app title to the way it was
@@ -99,11 +98,11 @@ Do
 Loop
 
 System
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' FUNCTIONS & SUBROUTINES
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' Automatically sets up the window size based on globals
 Sub SetupCanvas
     ' Free any old canvas
@@ -113,7 +112,7 @@ Sub SetupCanvas
         Canvas = 0
     End If
 
-    Canvas = NewImage(8 * CanvasWidth, CanvasFont * CanvasHeight * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
+    Canvas = NewImage(8 * CanvasSize.x, CanvasFont * CanvasSize.y * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
     Screen Canvas ' make the canvas the default screen
     Font CanvasFont ' set the current font
     Locate , , FALSE ' turn cursor off
@@ -151,20 +150,20 @@ Function DoWelcomeScreen%%
             CanvasFont = 24 - CanvasFont ' toggle between 16 and 8
 
         ElseIf k = KEY_UP_ARROW Then
-            CanvasHeight = CanvasHeight + 1
-            If CanvasHeight > CANVAS_HEIGHT_MAX Then CanvasHeight = CANVAS_HEIGHT_MAX
+            CanvasSize.y = CanvasSize.y + 1
+            If CanvasSize.y > CANVAS_HEIGHT_MAX Then CanvasSize.y = CANVAS_HEIGHT_MAX
 
         ElseIf k = KEY_DOWN_ARROW Then
-            CanvasHeight = CanvasHeight - 1
-            If CanvasHeight < CANVAS_HEIGHT_MIN Then CanvasHeight = CANVAS_HEIGHT_MIN
+            CanvasSize.y = CanvasSize.y - 1
+            If CanvasSize.y < CANVAS_HEIGHT_MIN Then CanvasSize.y = CANVAS_HEIGHT_MIN
 
         ElseIf k = KEY_LEFT_ARROW Then
-            CanvasWidth = CanvasWidth - 1
-            If CanvasWidth < CANVAS_WIDTH_MIN Then CanvasWidth = CANVAS_WIDTH_MIN
+            CanvasSize.x = CanvasSize.x - 1
+            If CanvasSize.x < CANVAS_WIDTH_MIN Then CanvasSize.x = CANVAS_WIDTH_MIN
 
         ElseIf k = KEY_RIGHT_ARROW Then
-            CanvasWidth = CanvasWidth + 1
-            If CanvasWidth > CANVAS_WIDTH_MAX Then CanvasWidth = CANVAS_WIDTH_MAX
+            CanvasSize.x = CanvasSize.x + 1
+            If CanvasSize.x > CANVAS_WIDTH_MAX Then CanvasSize.x = CANVAS_WIDTH_MAX
 
         ElseIf k = KEY_PLUS Or k = KEY_EQUALS Then
             ANSICPS = ANSICPS + 10
@@ -178,8 +177,8 @@ Function DoWelcomeScreen%%
 
         Color Yellow, Purple
         Locate 15, 56: Print Using "##"; CanvasFont
-        Locate 17, 58: Print Using "##"; CanvasHeight
-        Locate 19, 57: Print Using "###"; CanvasWidth
+        Locate 17, 58: Print Using "##"; CanvasSize.y
+        Locate 19, 57: Print Using "###"; CanvasSize.x
         Locate 21, 57: Print Using "#####"; ANSICPS
 
         Limit UPDATES_PER_SECOND
@@ -290,11 +289,11 @@ Function DoCommandLine%%
 
                 Case KEY_LOWER_W ' w
                     argIndex = argIndex + 1 ' value at next index
-                    CanvasWidth = ClampLong(Val(Command$(argIndex)), CANVAS_WIDTH_MIN, CANVAS_WIDTH_MAX)
+                    CanvasSize.x = ClampLong(Val(Command$(argIndex)), CANVAS_WIDTH_MIN, CANVAS_WIDTH_MAX)
 
                 Case KEY_LOWER_H ' h
                     argIndex = argIndex + 1 ' value at next index
-                    CanvasHeight = ClampLong(Val(Command$(argIndex)), CANVAS_HEIGHT_MIN, CANVAS_HEIGHT_MAX)
+                    CanvasSize.y = ClampLong(Val(Command$(argIndex)), CANVAS_HEIGHT_MIN, CANVAS_HEIGHT_MAX)
 
                 Case KEY_LOWER_F ' f
                     argIndex = argIndex + 1 ' value at next index
@@ -361,15 +360,15 @@ Function DoSelectedFiles%%
 
     DoSelectedFiles = e
 End Function
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 ' MODULE FILES
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 '$Include:'include/ProgramArgs.bas'
 '$Include:'include/FileOps.bas'
 '$Include:'include/Base64.bas'
 '$Include:'include/ANSIPrint.bas'
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------------------
 
