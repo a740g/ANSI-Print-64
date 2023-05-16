@@ -13,8 +13,8 @@ This is an [ANSI Escape Sequence](https://en.wikipedia.org/wiki/ANSI_escape_code
 - Works on Windows, Linux & macOS
 - Works in 32bpp graphics mode emulating text mode colors and true color extensions
 - Supports most common ANSI escape sequences and even some obscure ones
-  - All meaninful [ANSI Escape Sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
-  - All meaninful [ANSI.SYS Escape Sequences](https://en.wikipedia.org/wiki/ANSI.SYS)
+  - All relevant [ANSI Escape Sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+  - All relevant [ANSI.SYS Escape Sequences](https://en.wikipedia.org/wiki/ANSI.SYS)
   - [PabloDraw](https://github.com/cwensley/pablodraw) 24bpp color escape sequence
 - Supports embedded [ANSI music](docs/ansimtech.txt) - WIP
 - Supports [ANSImation](http://www.roysac.com/ansianim.html) content
