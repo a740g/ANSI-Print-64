@@ -6,268 +6,269 @@
 '-----------------------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '-----------------------------------------------------------------------------------------------------------------------
-'$Include:'include/CRTLib.bi'
-'$Include:'include/FileOps.bi'
-'$Include:'include/Base64.bi'
-'$Include:'include/ANSIPrint.bi'
+'$INCLUDE:'include/StringOps.bi'
+'$INCLUDE:'include/MathOps.bi'
+'$INCLUDE:'include/FileOps.bi'
+'$INCLUDE:'include/Base64.bi'
+'$INCLUDE:'include/ANSIPrint.bi'
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' METACOMMANDS
 '-----------------------------------------------------------------------------------------------------------------------
-$NoPrefix
-$Color:32
-$Resize:Smooth
-$ExeIcon:'./ANSIPrint64.ico'
-$VersionInfo:CompanyName=Samuel Gomes
-$VersionInfo:FileDescription=ANSI Print 64 executable
-$VersionInfo:InternalName=ANSIPrint64
-$VersionInfo:LegalCopyright=Copyright (c) 2023, Samuel Gomes
-$VersionInfo:LegalTrademarks=All trademarks are property of their respective owners
-$VersionInfo:OriginalFilename=ANSIPrint64.exe
-$VersionInfo:ProductName=ANSI Print 64
-$VersionInfo:Web=https://github.com/a740g
-$VersionInfo:Comments=https://github.com/a740g
-$VersionInfo:FILEVERSION#=1,3,5,0
-$VersionInfo:PRODUCTVERSION#=1,3,5,0
+$NOPREFIX
+$COLOR:32
+$RESIZE:SMOOTH
+$EXEICON:'./ANSIPrint64.ico'
+$VERSIONINFO:CompanyName=Samuel Gomes
+$VERSIONINFO:FileDescription=ANSI Print 64 executable
+$VERSIONINFO:InternalName=ANSIPrint64
+$VERSIONINFO:LegalCopyright=Copyright (c) 2023, Samuel Gomes
+$VERSIONINFO:LegalTrademarks=All trademarks are property of their respective owners
+$VERSIONINFO:OriginalFilename=ANSIPrint64.exe
+$VERSIONINFO:ProductName=ANSI Print 64
+$VERSIONINFO:Web=https://github.com/a740g
+$VERSIONINFO:Comments=https://github.com/a740g
+$VERSIONINFO:FILEVERSION#=1,3,6,0
+$VERSIONINFO:PRODUCTVERSION#=1,3,6,0
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' CONSTANTS
 '-----------------------------------------------------------------------------------------------------------------------
-Const APP_NAME = "ANSI Print 64"
-Const CANVAS_WIDTH_MAX = 240 ' max width of our text canvas
-Const CANVAS_WIDTH_MIN = 40
-Const CANVAS_HEIGHT_MAX = 67 ' max height of our text canvas
-Const CANVAS_HEIGHT_MIN = 25
-Const CANVAS_WIDTH_DEFAULT = 80 ' default width of our text canvas
-Const CANVAS_HEIGHT_DEFAULT = 25 ' default height of our text canvas
-Const CANVAS_FONT_DEFAULT = 16 ' default font that we want to use
-Const ANSI_CPS_DEFAULT = 3600 ' default rendering speed
-Const ANSI_CPS_MAX = 99999
-Const ANSI_CPS_MIN = 0
-Const UPDATES_PER_SECOND = 30
+CONST APP_NAME = "ANSI Print 64"
+CONST CANVAS_WIDTH_MAX = 320 ' max width of our text canvas
+CONST CANVAS_WIDTH_MIN = 1
+CONST CANVAS_HEIGHT_MAX = 120 ' max height of our text canvas
+CONST CANVAS_HEIGHT_MIN = 1
+CONST CANVAS_WIDTH_DEFAULT = 80 ' default width of our text canvas
+CONST CANVAS_HEIGHT_DEFAULT = 25 ' default height of our text canvas
+CONST CANVAS_FONT_DEFAULT = 16 ' default font that we want to use
+CONST ANSI_CPS_DEFAULT = 3600 ' default rendering speed
+CONST ANSI_CPS_MAX = 99999
+CONST ANSI_CPS_MIN = 0
+CONST UPDATES_PER_SECOND = 30
 ' Program events
-Const EVENT_NONE = 0 ' idle
-Const EVENT_QUIT = 1 ' user wants to quit
-Const EVENT_CMDS = 2 ' process command line
-Const EVENT_LOAD = 3 ' user want to load files
-Const EVENT_DROP = 4 ' user dropped files
-Const EVENT_DRAW = 5 ' draw next art
+CONST EVENT_NONE = 0 ' idle
+CONST EVENT_QUIT = 1 ' user wants to quit
+CONST EVENT_CMDS = 2 ' process command line
+CONST EVENT_LOAD = 3 ' user want to load files
+CONST EVENT_DROP = 4 ' user dropped files
+CONST EVENT_DRAW = 5 ' draw next art
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' GLOBAL VARIABLES
 '-----------------------------------------------------------------------------------------------------------------------
-Dim Shared Canvas As Long ' a handle to the canvas image
-Dim Shared CanvasSize As Vector2DType ' the width and height of our canvas in characters
-Dim Shared CanvasFont As Long ' just holds the font type (not a font handle!)
-Dim Shared ANSICPS As Long ' rendering speed (0 = no delay; 1 = 1 char / sec, 3600 = 3600 char / sec and so on)
+DIM SHARED Canvas AS LONG ' a handle to the canvas image
+DIM SHARED CanvasSize AS Vector2LType ' the width and height of our canvas in characters
+DIM SHARED CanvasFont AS LONG ' just holds the font type (not a font handle!)
+DIM SHARED ANSICPS AS LONG ' rendering speed (0 = no delay; 1 = 1 char / sec, 3600 = 3600 char / sec and so on)
 '-----------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '-----------------------------------------------------------------------------------------------------------------------
-ChDir StartDir$ ' Change to the directory specifed by the environment
+CHDIR STARTDIR$ ' Change to the directory specifed by the environment
 ANSICPS = ANSI_CPS_DEFAULT ' set default speed
 CanvasSize.x = CANVAS_WIDTH_DEFAULT ' set default width
 CanvasSize.y = CANVAS_HEIGHT_DEFAULT ' set default height
 CanvasFont = CANVAS_FONT_DEFAULT ' set default font
 SetupCanvas ' set the initial window size
-Title APP_NAME + " " + OS$ ' Set app title to the way it was
-AllowFullScreen SquarePixels , Smooth ' Allow the program window to run fullscreen with Alt+Enter
-AcceptFileDrop ' Enable drag and drop of files
+TITLE APP_NAME + " " + OS$ ' Set app title to the way it was
+ALLOWFULLSCREEN SQUAREPIXELS , SMOOTH ' Allow the program window to run fullscreen with Alt+Enter
+ACCEPTFILEDROP ' Enable drag and drop of files
 
-Dim event As Byte: event = EVENT_CMDS ' defaults to command line event on program entry
+DIM event AS BYTE: event = EVENT_CMDS ' defaults to command line event on program entry
 
 ' Event loop
-Do
-    Select Case event
-        Case EVENT_QUIT
-            Exit Do
+DO
+    SELECT CASE event
+        CASE EVENT_QUIT
+            EXIT DO
 
-        Case EVENT_CMDS
-            event = DoCommandLine
+        CASE EVENT_CMDS
+            event = OnCommandLine
 
-        Case EVENT_LOAD
-            event = DoSelectedFiles
+        CASE EVENT_LOAD
+            event = OnSelectedFiles
 
-        Case EVENT_DROP
-            event = DoDroppedFiles
+        CASE EVENT_DROP
+            event = OnDroppedFiles
 
-        Case Else
-            event = DoWelcomeScreen
-    End Select
-Loop
+        CASE ELSE
+            event = OnWelcomeScreen
+    END SELECT
+LOOP
 
-System
+SYSTEM
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' FUNCTIONS & SUBROUTINES
 '-----------------------------------------------------------------------------------------------------------------------
 ' Automatically sets up the window size based on globals
-Sub SetupCanvas
+SUB SetupCanvas
     ' Free any old canvas
-    If Canvas < -1 Then
-        Screen 0
-        FreeImage Canvas
+    IF Canvas < -1 THEN
+        SCREEN 0
+        FREEIMAGE Canvas
         Canvas = 0
-    End If
+    END IF
 
-    Canvas = NewImage(8 * CanvasSize.x, CanvasFont * CanvasSize.y * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
-    Screen Canvas ' make the canvas the default screen
-    Font CanvasFont ' set the current font
-    Locate , , FALSE ' turn cursor off
-End Sub
+    Canvas = NEWIMAGE(8 * CanvasSize.x, CanvasFont * CanvasSize.y * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
+    SCREEN Canvas ' make the canvas the default screen
+    FONT CanvasFont ' set the current font
+    LOCATE , , FALSE ' turn cursor off
+END SUB
 
 
 ' Welcome screen loop
-Function DoWelcomeScreen%%
+FUNCTION OnWelcomeScreen%%
     ' Allocate and setup the welcome screen
-    Dim As Long img: img = NewImage(80 * 8, 16 * 25, 32)
-    Screen img
+    DIM AS LONG img: img = NEWIMAGE(80 * 8, 16 * 25, 32)
+    SCREEN img
 
     ' Load the ANSI art data
-    Restore Data_ANSIPrint_ans_3569
-    Dim As String buffer: buffer = LoadResource
+    RESTORE Data_ANSIPrint_ans_3569
+    DIM AS STRING buffer: buffer = LoadResource
 
     ' Render the ANSI art
     PrintANSI buffer
 
     ' Get into a loop and check for input
-    Dim k As Long, e As Byte
-    Do
-        k = KeyHit
+    DIM k AS LONG, e AS BYTE
+    DO
+        k = KEYHIT
 
-        If k = KEY_ESCAPE Then
+        IF k = KEY_ESCAPE THEN
             e = EVENT_QUIT
 
-        ElseIf TotalDroppedFiles > 0 Then
+        ELSEIF TOTALDROPPEDFILES > 0 THEN
             e = EVENT_DROP
 
-        ElseIf k = KEY_F1 Then
+        ELSEIF k = KEY_F1 THEN
             e = EVENT_LOAD
 
-        ElseIf k = KEY_UPPER_F Or k = KEY_LOWER_F Then
+        ELSEIF k = KEY_UPPER_F OR k = KEY_LOWER_F THEN
             CanvasFont = 24 - CanvasFont ' toggle between 16 and 8
 
-        ElseIf k = KEY_UP_ARROW Then
+        ELSEIF k = KEY_UP_ARROW THEN
             CanvasSize.y = CanvasSize.y + 1
-            If CanvasSize.y > CANVAS_HEIGHT_MAX Then CanvasSize.y = CANVAS_HEIGHT_MAX
+            IF CanvasSize.y > CANVAS_HEIGHT_MAX THEN CanvasSize.y = CANVAS_HEIGHT_MAX
 
-        ElseIf k = KEY_DOWN_ARROW Then
+        ELSEIF k = KEY_DOWN_ARROW THEN
             CanvasSize.y = CanvasSize.y - 1
-            If CanvasSize.y < CANVAS_HEIGHT_MIN Then CanvasSize.y = CANVAS_HEIGHT_MIN
+            IF CanvasSize.y < CANVAS_HEIGHT_MIN THEN CanvasSize.y = CANVAS_HEIGHT_MIN
 
-        ElseIf k = KEY_LEFT_ARROW Then
+        ELSEIF k = KEY_LEFT_ARROW THEN
             CanvasSize.x = CanvasSize.x - 1
-            If CanvasSize.x < CANVAS_WIDTH_MIN Then CanvasSize.x = CANVAS_WIDTH_MIN
+            IF CanvasSize.x < CANVAS_WIDTH_MIN THEN CanvasSize.x = CANVAS_WIDTH_MIN
 
-        ElseIf k = KEY_RIGHT_ARROW Then
+        ELSEIF k = KEY_RIGHT_ARROW THEN
             CanvasSize.x = CanvasSize.x + 1
-            If CanvasSize.x > CANVAS_WIDTH_MAX Then CanvasSize.x = CANVAS_WIDTH_MAX
+            IF CanvasSize.x > CANVAS_WIDTH_MAX THEN CanvasSize.x = CANVAS_WIDTH_MAX
 
-        ElseIf k = KEY_PLUS Or k = KEY_EQUALS Then
+        ELSEIF k = KEY_PLUS OR k = KEY_EQUALS THEN
             ANSICPS = ANSICPS + 10
-            If ANSICPS > ANSI_CPS_MAX Then ANSICPS = ANSI_CPS_MAX
+            IF ANSICPS > ANSI_CPS_MAX THEN ANSICPS = ANSI_CPS_MAX
 
-        ElseIf k = KEY_MINUS Or k = KEY_UNDERSCORE Then
+        ELSEIF k = KEY_MINUS OR k = KEY_UNDERSCORE THEN
             ANSICPS = ANSICPS - 10
-            If ANSICPS < ANSI_CPS_MIN Then ANSICPS = ANSI_CPS_MIN
+            IF ANSICPS < ANSI_CPS_MIN THEN ANSICPS = ANSI_CPS_MIN
 
-        End If
+        END IF
 
-        Color Yellow, Purple
-        Locate 15, 56: Print Using "##"; CanvasFont
-        Locate 17, 58: Print Using "##"; CanvasSize.y
-        Locate 19, 57: Print Using "###"; CanvasSize.x
-        Locate 21, 57: Print Using "#####"; ANSICPS
+        COLOR Yellow, Purple
+        LOCATE 15, 56: PRINT USING "##"; CanvasFont
+        LOCATE 17, 58: PRINT USING "##"; CanvasSize.y
+        LOCATE 19, 57: PRINT USING "###"; CanvasSize.x
+        LOCATE 21, 57: PRINT USING "#####"; ANSICPS
 
-        Limit UPDATES_PER_SECOND
-    Loop While e = EVENT_NONE
+        LIMIT UPDATES_PER_SECOND
+    LOOP WHILE e = EVENT_NONE
 
     ' Free screen image
-    Screen 0
-    FreeImage img
+    SCREEN 0
+    FREEIMAGE img
 
-    DoWelcomeScreen = e
+    OnWelcomeScreen = e
 
     Data_ANSIPrint_ans_3569:
-    Data 3569,1044,-1
-    Data eJytVs2PmkAU1/TWZO9NvUxP1Wy2ooAeOFnFlUTRCq5NNKGm2W2alt1ka2/8p27Cv9L3ZoZh+Ia2zygw
-    Data b3y/D94MdA6KTzqHgaHq/kvnoKr+y/+MDpS/eh0BXPCSQNDroe/huUe/HgThXzrMM/FRSqQDeI9Y8SwW
-    Data h+qTIyEB/ASkj6UCQAqw9JGCd70eHiALCcITjA/hxNhlGZaA8igOOQIe/geOARbuweB7gKYHHGXn9MP+
-    Data BMNf6Am7LMaKoXh9VAfnCBEgfa+PZUkQf6iugCJiWkp18W8FWAgCk0GMd/RQD6J4feogFKIF8cejtY9U
-    Data EZ1BpfNhnoLBAhTdUDVDGzTtPahjQAmNlxgYmlZags8v7JXiyNYqnU7r1oVhzGCGYmhjX1DVFP+SCRiW
-    Data pih+PpO68CncAsz8iJgwFo3h08i6oUVZfpc4FUj5bEzHMV4fVwC05nwAB7ocePoDRpQf+6vd0rVuHHNp
-    Data Tl0yt5amky4uiajPP0E+co0RbRZJNoKPRKeCi8xEun0Rl2x93U96KXYt05mWe2mbn13Ylz7tLDdRVuhO
-    Data gwk9Qk65mAvTkpLwb4byUnBdBZ9BR1MIsyQHRG5GnDkPHsrtm69tlyxM63Yh2ccna353MOpxAkUqhI5m
-    Data MmqbSBdUpZ11OIRxU4bS6jBYfWFpno27DbTYbL23yWS7Xe/LLZ1O7LuJI0xl9ysydKT1CnykTRki1bCq
-    Data JXOUlHZGI3dzF3/Eq3ITylLjNzvP1qU5x7W7RaMaOLu3Zu4ibexQj1uVq8r4nJRS54kQFjTNX7ZvaocS
-    Data bEKRr/GEDBOkwsTjUd5hdbFsqdnXwU25u1vTnplb4mxMc5a3F4x0XUWP4wzHRwGhLLnuW0ZKSUpLUXDc
-    Data HOSG8DGLMMMkGRwpzKIVg4JpOr48htyxxq+RpRG/sb6drle2a5Ffv7/+IKczOT2f31W2ZSacyW5qKsrE
-    Data dqzN8/fHM5nd+0+5M09jTfmWGls+Pd7vn34+yGNDZagqQ0W7vmq12u1N600Lo/3K+rgid7eTVjL+AE5A
-    Data qkw=
-End Function
+    DATA 3569,1044,-1
+    DATA eJytVs2PmkAU1/TWZO9NvUxP1Wy2ooAeOFnFlUTRCq5NNKGm2W2alt1ka2/8p27Cv9L3ZoZh+Ia2zygw
+    DATA b3y/D94MdA6KTzqHgaHq/kvnoKr+y/+MDpS/eh0BXPCSQNDroe/huUe/HgThXzrMM/FRSqQDeI9Y8SwW
+    DATA h+qTIyEB/ASkj6UCQAqw9JGCd70eHiALCcITjA/hxNhlGZaA8igOOQIe/geOARbuweB7gKYHHGXn9MP+
+    DATA BMNf6Am7LMaKoXh9VAfnCBEgfa+PZUkQf6iugCJiWkp18W8FWAgCk0GMd/RQD6J4feogFKIF8cejtY9U
+    DATA EZ1BpfNhnoLBAhTdUDVDGzTtPahjQAmNlxgYmlZags8v7JXiyNYqnU7r1oVhzGCGYmhjX1DVFP+SCRiW
+    DATA pih+PpO68CncAsz8iJgwFo3h08i6oUVZfpc4FUj5bEzHMV4fVwC05nwAB7ocePoDRpQf+6vd0rVuHHNp
+    DATA Tl0yt5amky4uiajPP0E+co0RbRZJNoKPRKeCi8xEun0Rl2x93U96KXYt05mWe2mbn13Ylz7tLDdRVuhO
+    DATA gwk9Qk65mAvTkpLwb4byUnBdBZ9BR1MIsyQHRG5GnDkPHsrtm69tlyxM63Yh2ccna353MOpxAkUqhI5m
+    DATA MmqbSBdUpZ11OIRxU4bS6jBYfWFpno27DbTYbL23yWS7Xe/LLZ1O7LuJI0xl9ysydKT1CnykTRki1bCq
+    DATA JXOUlHZGI3dzF3/Eq3ITylLjNzvP1qU5x7W7RaMaOLu3Zu4ibexQj1uVq8r4nJRS54kQFjTNX7ZvaocS
+    DATA bEKRr/GEDBOkwsTjUd5hdbFsqdnXwU25u1vTnplb4mxMc5a3F4x0XUWP4wzHRwGhLLnuW0ZKSUpLUXDc
+    DATA HOSG8DGLMMMkGRwpzKIVg4JpOr48htyxxq+RpRG/sb6drle2a5Ffv7/+IKczOT2f31W2ZSacyW5qKsrE
+    DATA dqzN8/fHM5nd+0+5M09jTfmWGls+Pd7vn34+yGNDZagqQ0W7vmq12u1N600Lo/3K+rgid7eTVjL+AE5A
+    DATA qkw=
+END FUNCTION
 
 
 ' Initializes, loads and plays a mod file
 ' Also checks for input, shows info etc
-Function DoFileDraw%% (fileName As String)
+FUNCTION DoFileDraw%% (fileName AS STRING)
     DoFileDraw = EVENT_DRAW ' default event is to draw next file
 
-    If Not FileExists(fileName) Then
-        MessageBox APP_NAME, "Failed to load: " + fileName, "error"
+    IF NOT FILEEXISTS(fileName) THEN
+        MESSAGEBOX APP_NAME, "Failed to load: " + fileName, "error"
 
-        Exit Function
-    End If
+        EXIT FUNCTION
+    END IF
 
     SetupCanvas ' setup the canvas to draw on
 
     ' Set the app title to display the file name
-    Title APP_NAME + " - " + GetFileNameFromPathOrURL(fileName)
+    TITLE APP_NAME + " - " + GetFileNameFromPathOrURL(fileName)
 
-    Dim fh As Long: fh = FreeFile
-    Open fileName For Binary Access Read As fh
+    DIM fh AS LONG: fh = FREEFILE
+    OPEN fileName FOR BINARY ACCESS READ AS fh
 
-    Color DarkGray, Black ' reset the foregound and background colors
-    Cls ' this will reset the cursor to 1, 1
+    COLOR DarkGray, Black ' reset the foregound and background colors
+    CLS ' this will reset the cursor to 1, 1
     ResetANSIEmulator
     SetANSIEmulationSpeed ANSICPS
-    Dim dummy As Long: dummy = PrintANSIString(Input$(LOF(fh), fh)) ' print and ignore return value
+    DIM dummy AS LONG: dummy = PrintANSIString(INPUT$(LOF(fh), fh)) ' print and ignore return value
 
-    Close fh
+    CLOSE fh
 
-    Title APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPathOrURL(fileName)
+    TITLE APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPathOrURL(fileName)
 
-    Dim As Long k
+    DIM AS LONG k
 
-    Do
-        k = KeyHit
+    DO
+        k = KEYHIT
 
-        If TotalDroppedFiles > 0 Then
+        IF TOTALDROPPEDFILES > 0 THEN
             DoFileDraw = EVENT_DROP
-            Exit Do
-        ElseIf k = 21248 Then ' Shift + Delete - you known what it does
-            If MessageBox(APP_NAME, "Are you sure you want to delete " + fileName + " permanently?", "yesno", "question", 0) = 1 Then
-                Kill fileName
-                Exit Do
-            End If
-        End If
+            EXIT DO
+        ELSEIF k = 21248 THEN ' Shift + Delete - you known what it does
+            IF MESSAGEBOX(APP_NAME, "Are you sure you want to delete " + fileName + " permanently?", "yesno", "question", 0) = 1 THEN
+                KILL fileName
+                EXIT DO
+            END IF
+        END IF
 
-        Limit UPDATES_PER_SECOND
-    Loop Until k = KEY_ESCAPE
+        LIMIT UPDATES_PER_SECOND
+    LOOP UNTIL k = KEY_ESCAPE
 
-    Title APP_NAME + " " + OS$ ' Set app title to the way it was
-End Function
+    TITLE APP_NAME + " " + OS$ ' Set app title to the way it was
+END FUNCTION
 
 
 ' Processes the command line one file at a time
-Function DoCommandLine%%
-    Dim e As Byte: e = EVENT_NONE
+FUNCTION OnCommandLine%%
+    DIM e AS BYTE: e = EVENT_NONE
 
-    If GetProgramArgumentIndex(KEY_QUESTION_MARK) > 0 Then
+    IF GetProgramArgumentIndex(KEY_QUESTION_MARK) > 0 THEN
         MessageBox APP_NAME, APP_NAME + Chr$(KEY_ENTER) + _
             "Syntax: ANSIPrintDemo [ansi_art.ans]" + Chr$(KEY_ENTER) + _
             "  -w x: Text canvas width" + Chr$(KEY_ENTER) + _
@@ -279,99 +280,99 @@ Function DoCommandLine%%
             "https://github.com/a740g/", "info"
 
         e = EVENT_QUIT
-    Else
-        Dim argName As Integer
-        Dim argIndex As Long: argIndex = 1 ' start with the first argument
+    ELSE
+        DIM argName AS INTEGER
+        DIM argIndex AS LONG: argIndex = 1 ' start with the first argument
 
-        Do
-            argName = ToLower(GetProgramArgument("whfs", argIndex))
+        DO
+            argName = ToLowerCase(GetProgramArgument("whfs", argIndex))
 
-            Select Case argName
-                Case -1 ' no more arguments
-                    Exit Do
+            SELECT CASE argName
+                CASE -1 ' no more arguments
+                    EXIT DO
 
-                Case KEY_LOWER_W ' w
+                CASE KEY_LOWER_W ' w
                     argIndex = argIndex + 1 ' value at next index
-                    CanvasSize.x = ClampLong(Val(Command$(argIndex)), CANVAS_WIDTH_MIN, CANVAS_WIDTH_MAX)
+                    CanvasSize.x = ClampLong(VAL(COMMAND$(argIndex)), CANVAS_WIDTH_MIN, CANVAS_WIDTH_MAX)
 
-                Case KEY_LOWER_H ' h
+                CASE KEY_LOWER_H ' h
                     argIndex = argIndex + 1 ' value at next index
-                    CanvasSize.y = ClampLong(Val(Command$(argIndex)), CANVAS_HEIGHT_MIN, CANVAS_HEIGHT_MAX)
+                    CanvasSize.y = ClampLong(VAL(COMMAND$(argIndex)), CANVAS_HEIGHT_MIN, CANVAS_HEIGHT_MAX)
 
-                Case KEY_LOWER_F ' f
+                CASE KEY_LOWER_F ' f
                     argIndex = argIndex + 1 ' value at next index
-                    CanvasFont = Val(Command$(argIndex))
-                    If CanvasFont <> 8 Then CanvasFont = 16
+                    CanvasFont = VAL(COMMAND$(argIndex))
+                    IF CanvasFont <> 8 THEN CanvasFont = 16
 
-                Case KEY_LOWER_S ' s
+                CASE KEY_LOWER_S ' s
                     argIndex = argIndex + 1 ' value at next index
-                    ANSICPS = ClampLong(Val(Command$(argIndex)), ANSI_CPS_MIN, ANSI_CPS_MAX)
+                    ANSICPS = ClampLong(VAL(COMMAND$(argIndex)), ANSI_CPS_MIN, ANSI_CPS_MAX)
 
-                Case Else ' probably a file name
-                    e = DoFileDraw(Command$(argIndex))
-                    If e <> EVENT_DRAW Then Exit Do
+                CASE ELSE ' probably a file name
+                    e = DoFileDraw(COMMAND$(argIndex))
+                    IF e <> EVENT_DRAW THEN EXIT DO
 
-            End Select
+            END SELECT
 
             argIndex = argIndex + 1 ' move to the next index
-        Loop Until argName = -1
-    End If
+        LOOP UNTIL argName = -1
+    END IF
 
-    DoCommandLine = e
-End Function
+    OnCommandLine = e
+END FUNCTION
 
 
 ' Processes dropped files one file at a time
-Function DoDroppedFiles%%
+FUNCTION OnDroppedFiles%%
     ' Make a copy of the dropped file and clear the list
-    ReDim fileNames(1 To TotalDroppedFiles) As String
-    Dim i As Unsigned Long
-    Dim e As Byte: e = EVENT_NONE
+    REDIM fileNames(1 TO TOTALDROPPEDFILES) AS STRING
+    DIM i AS UNSIGNED LONG
+    DIM e AS BYTE: e = EVENT_NONE
 
-    For i = 1 To TotalDroppedFiles
-        fileNames(i) = DroppedFile(i)
-    Next
-    FinishDrop ' This is critical
+    FOR i = 1 TO TOTALDROPPEDFILES
+        fileNames(i) = DROPPEDFILE(i)
+    NEXT
+    FINISHDROP ' This is critical
 
     ' Now play the dropped file one at a time
-    For i = LBound(fileNames) To UBound(fileNames)
+    FOR i = LBOUND(fileNames) TO UBOUND(fileNames)
         e = DoFileDraw(fileNames(i))
-        If e <> EVENT_DRAW Then Exit For
-    Next
+        IF e <> EVENT_DRAW THEN EXIT FOR
+    NEXT
 
-    DoDroppedFiles = e
-End Function
+    OnDroppedFiles = e
+END FUNCTION
 
 
 ' Processes a list of files selected by the user
-Function DoSelectedFiles%%
-    Dim ofdList As String
-    Dim e As Byte: e = EVENT_NONE
+FUNCTION OnSelectedFiles%%
+    DIM ofdList AS STRING
+    DIM e AS BYTE: e = EVENT_NONE
 
-    ofdList = OpenFileDialog$(APP_NAME, NULLSTRING, "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
-    If ofdList = NULLSTRING Then Exit Function
+    ofdList = OPENFILEDIALOG$(APP_NAME, EMPTY_STRING, "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
+    IF ofdList = EMPTY_STRING THEN EXIT FUNCTION
 
-    ReDim fileNames(0 To 0) As String
-    Dim As Long i, j
+    REDIM fileNames(0 TO 0) AS STRING
+    DIM AS LONG i, j
 
-    j = TokenizeString(ofdList, "|", NULLSTRING, FALSE, fileNames())
+    j = TokenizeString(ofdList, "|", EMPTY_STRING, FALSE, fileNames())
 
-    For i = 0 To j - 1
+    FOR i = 0 TO j - 1
         e = DoFileDraw(fileNames(i))
-        If e <> EVENT_DRAW Then Exit For
-    Next
+        IF e <> EVENT_DRAW THEN EXIT FOR
+    NEXT
 
-    DoSelectedFiles = e
-End Function
+    OnSelectedFiles = e
+END FUNCTION
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' MODULE FILES
 '-----------------------------------------------------------------------------------------------------------------------
-'$Include:'include/ProgramArgs.bas'
-'$Include:'include/FileOps.bas'
-'$Include:'include/StringOps.bas'
-'$Include:'include/Base64.bas'
-'$Include:'include/ANSIPrint.bas'
+'$INCLUDE:'include/StringOps.bas'
+'$INCLUDE:'include/FileOps.bas'
+'$INCLUDE:'include/Base64.bas'
+'$INCLUDE:'include/ProgramArgs.bas'
+'$INCLUDE:'include/ANSIPrint.bas'
 '-----------------------------------------------------------------------------------------------------------------------
 '-----------------------------------------------------------------------------------------------------------------------
