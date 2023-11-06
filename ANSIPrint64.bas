@@ -20,17 +20,17 @@ $NOPREFIX
 $COLOR:32
 $RESIZE:SMOOTH
 $EXEICON:'./ANSIPrint64.ico'
-$VERSIONINFO:CompanyName=Samuel Gomes
-$VERSIONINFO:FileDescription=ANSI Print 64 executable
-$VERSIONINFO:InternalName=ANSIPrint64
-$VERSIONINFO:LegalCopyright=Copyright (c) 2023, Samuel Gomes
-$VERSIONINFO:LegalTrademarks=All trademarks are property of their respective owners
-$VERSIONINFO:OriginalFilename=ANSIPrint64.exe
-$VERSIONINFO:ProductName=ANSI Print 64
-$VERSIONINFO:Web=https://github.com/a740g
-$VERSIONINFO:Comments=https://github.com/a740g
-$VERSIONINFO:FILEVERSION#=1,3,6,0
-$VERSIONINFO:PRODUCTVERSION#=1,3,6,0
+$VERSIONINFO:CompanyName='Samuel Gomes'
+$VERSIONINFO:FileDescription='ANSI Print 64 executable'
+$VERSIONINFO:InternalName='ANSIPrint64'
+$VERSIONINFO:LegalCopyright='Copyright (c) 2023, Samuel Gomes'
+$VERSIONINFO:LegalTrademarks='All trademarks are property of their respective owners'
+$VERSIONINFO:OriginalFilename='ANSIPrint64.exe'
+$VERSIONINFO:ProductName='ANSI Print 64'
+$VERSIONINFO:Web='https://github.com/a740g'
+$VERSIONINFO:Comments='https://github.com/a740g'
+$VERSIONINFO:FILEVERSION#=1,3,7,0
+$VERSIONINFO:PRODUCTVERSION#=1,3,7,0
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ FUNCTION OnWelcomeScreen%%
     DIM AS STRING buffer: buffer = LoadResource
 
     ' Render the ANSI art
-    PrintANSI buffer
+    ANSI_Print buffer
 
     ' Get into a loop and check for input
     DIM k AS LONG, e AS BYTE
@@ -233,9 +233,9 @@ FUNCTION DoFileDraw%% (fileName AS STRING)
 
     COLOR DarkGray, Black ' reset the foregound and background colors
     CLS ' this will reset the cursor to 1, 1
-    ResetANSIEmulator
-    SetANSIEmulationSpeed ANSICPS
-    DIM dummy AS LONG: dummy = PrintANSIString(INPUT$(LOF(fh), fh)) ' print and ignore return value
+    ANSI_ResetEmulator
+    ANSI_SetEmulationSpeed ANSICPS
+    DIM dummy AS _BYTE: dummy = ANSI_PrintString(INPUT$(LOF(fh), fh)) ' print and ignore return value
 
     CLOSE fh
 
@@ -292,11 +292,11 @@ FUNCTION OnCommandLine%%
 
                 CASE KEY_LOWER_W ' w
                     argIndex = argIndex + 1 ' value at next index
-                    CanvasSize.x = ClampLong(VAL(COMMAND$(argIndex)), CANVAS_WIDTH_MIN, CANVAS_WIDTH_MAX)
+                    CanvasSize.x = Math_ClampLong(VAL(COMMAND$(argIndex)), CANVAS_WIDTH_MIN, CANVAS_WIDTH_MAX)
 
                 CASE KEY_LOWER_H ' h
                     argIndex = argIndex + 1 ' value at next index
-                    CanvasSize.y = ClampLong(VAL(COMMAND$(argIndex)), CANVAS_HEIGHT_MIN, CANVAS_HEIGHT_MAX)
+                    CanvasSize.y = Math_ClampLong(VAL(COMMAND$(argIndex)), CANVAS_HEIGHT_MIN, CANVAS_HEIGHT_MAX)
 
                 CASE KEY_LOWER_F ' f
                     argIndex = argIndex + 1 ' value at next index
@@ -305,7 +305,7 @@ FUNCTION OnCommandLine%%
 
                 CASE KEY_LOWER_S ' s
                     argIndex = argIndex + 1 ' value at next index
-                    ANSICPS = ClampLong(VAL(COMMAND$(argIndex)), ANSI_CPS_MIN, ANSI_CPS_MAX)
+                    ANSICPS = Math_ClampLong(VAL(COMMAND$(argIndex)), ANSI_CPS_MIN, ANSI_CPS_MAX)
 
                 CASE ELSE ' probably a file name
                     e = DoFileDraw(COMMAND$(argIndex))
