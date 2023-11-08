@@ -35,20 +35,20 @@ This is an [ANSI Escape Sequence](https://en.wikipedia.org/wiki/ANSI_escape_code
 
 ```VB
 ' Easy top-level API (call and forget style)
-Sub PrintANSI (sANSI As String)
+SUB ANSI_Print (sANSI AS STRING)
 
 ' Core library functions (if more control is required)
-Sub InitializeANSIEmulator
-Sub ResetANSIEmulator
-Sub SetANSIEmulationSpeed (nCPS As Long)
-Function PrintANSICharacter& (ch As Unsigned Byte)
-Function PrintANSIString& (s As String)
+SUB ANSI_InitializeEmulator
+SUB ANSI_ResetEmulator
+SUB ANSI_SetEmulationSpeed (nCPS AS LONG)
+FUNCTION ANSI_PrintCharacter%% (ch AS _UNSIGNED _BYTE)
+FUNCTION ANSI_PrintString%% (s AS STRING)
 
 ' Library support functions
-Sub SetANSICanvasColor (c As Unsigned Long, isBackground As Long, isLegacy As Long)
-Function GetANSICanvasWidth&
-Function GetANSICanvasHeight&
-Sub ClearANSICanvasArea (l As Long, t As Long, r As Long, b As Long)
+SUB ANSI_SetTextCanvasColor (c AS _UNSIGNED LONG, isBackground AS LONG, isLegacy AS LONG)
+FUNCTION ANSI_GetTextCanvasWidth&
+FUNCTION ANSI_GetTextCanvasHeight&
+SUB ANSI_ClearTextCanvasArea (l AS LONG, t AS LONG, r AS LONG, b AS LONG)
 ```
 
 ## FAQ
