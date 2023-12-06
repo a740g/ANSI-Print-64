@@ -131,7 +131,7 @@ FUNCTION OnWelcomeScreen%%
 
     ' Load the ANSI art data
     RESTORE Data_ANSIPrint_ans_3547
-    DIM AS STRING buffer: buffer = Base64_LoadResource
+    DIM AS STRING buffer: buffer = Base64_LoadResourceData
 
     ' Render the ANSI art
     ANSI_Print buffer
