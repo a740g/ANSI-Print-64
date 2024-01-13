@@ -284,7 +284,7 @@ FUNCTION OnCommandLine%%
         DIM argIndex AS LONG: argIndex = 1 ' start with the first argument
 
         DO
-            argName = ToLowerCase(GetProgramArgument("whfs", argIndex))
+            argName = String_ToLowerCase(GetProgramArgument("whfs", argIndex))
 
             SELECT CASE argName
                 CASE -1 ' no more arguments
@@ -348,13 +348,13 @@ FUNCTION OnSelectedFiles%%
     DIM ofdList AS STRING
     DIM e AS BYTE: e = EVENT_NONE
 
-    ofdList = OPENFILEDIALOG$(APP_NAME, EMPTY_STRING, "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
-    IF ofdList = EMPTY_STRING THEN EXIT FUNCTION
+    ofdList = OPENFILEDIALOG$(APP_NAME, , "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
+    IF LEN(ofdList) = NULL THEN EXIT FUNCTION
 
     REDIM fileNames(0 TO 0) AS STRING
     DIM AS LONG i, j
 
-    j = TokenizeString(ofdList, "|", EMPTY_STRING, FALSE, fileNames())
+    j = String_Tokenize(ofdList, "|", STRING_EMPTY, FALSE, fileNames())
 
     FOR i = 0 TO j - 1
         e = DoFileDraw(fileNames(i))
