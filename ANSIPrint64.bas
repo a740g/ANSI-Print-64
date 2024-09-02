@@ -212,7 +212,7 @@ FUNCTION OnWelcomeScreen%%
 END FUNCTION
 
 
-' Initializes, loads and plays a mod file
+' Initializes, loads and renders an ANSI file
 ' Also checks for input, shows info etc
 FUNCTION DoFileDraw%% (fileName AS STRING)
     DoFileDraw = EVENT_DRAW ' default event is to draw next file
@@ -223,21 +223,28 @@ FUNCTION DoFileDraw%% (fileName AS STRING)
         EXIT FUNCTION
     END IF
 
-    SetupCanvas ' setup the canvas to draw on
+    ' Read the contents of the whole file into memory
+    DIM buffer AS STRING: buffer = _READFILE$(fileName)
+
+    ' Check if the file has a SAUCE record and if so setup canvas properties using it
+    IF SAUCE_IsPresent(buffer) THEN
+        DIM sauce AS SAUCEType: SAUCE_Read buffer, sauce
+        CanvasSize.x = ANSI_GetWidth(sauce)
+        CanvasSize.y = ANSI_GetHeight(sauce)
+        CanvasFont = ANSI_GetFontHeight(sauce)
+    END IF
+
+    ' Now setup the canvas to draw on
+    SetupCanvas
 
     ' Set the app title to display the file name
     TITLE APP_NAME + " - " + GetFileNameFromPathOrURL(fileName)
-
-    DIM fh AS LONG: fh = FREEFILE
-    OPEN fileName FOR BINARY ACCESS READ AS fh
 
     COLOR DarkGray, Black ' reset the foregound and background colors
     CLS ' this will reset the cursor to 1, 1
     ANSI_ResetEmulator
     ANSI_SetEmulationSpeed ANSICPS
-    DIM dummy AS _BYTE: dummy = ANSI_PrintString(INPUT$(LOF(fh), fh)) ' print and ignore return value
-
-    CLOSE fh
+    DIM dummy AS _BYTE: dummy = ANSI_PrintString(buffer) ' print and ignore return value
 
     TITLE APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPathOrURL(fileName)
 
