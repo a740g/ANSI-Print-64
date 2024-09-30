@@ -1,14 +1,14 @@
 '-----------------------------------------------------------------------------------------------------------------------
 ' QB64-PE ANSI emulator demo
-' Copyright (c) 2023 Samuel Gomes
+' Copyright (c) 2024 Samuel Gomes
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '-----------------------------------------------------------------------------------------------------------------------
 '$INCLUDE:'include/StringOps.bi'
-'$INCLUDE:'include/MathOps.bi'
-'$INCLUDE:'include/FileOps.bi'
+'$INCLUDE:'include/Math/Math.bi'
+'$INCLUDE:'include/Pathname.bi'
 '$INCLUDE:'include/Base64.bi'
 '$INCLUDE:'include/ANSIPrint.bi'
 '-----------------------------------------------------------------------------------------------------------------------
@@ -16,21 +16,20 @@
 '-----------------------------------------------------------------------------------------------------------------------
 ' METACOMMANDS
 '-----------------------------------------------------------------------------------------------------------------------
-$NOPREFIX
 $COLOR:32
 $RESIZE:SMOOTH
 $EXEICON:'./ANSIPrint64.ico'
 $VERSIONINFO:CompanyName='Samuel Gomes'
 $VERSIONINFO:FileDescription='ANSI Print 64 executable'
 $VERSIONINFO:InternalName='ANSIPrint64'
-$VERSIONINFO:LegalCopyright='Copyright (c) 2023, Samuel Gomes'
+$VERSIONINFO:LegalCopyright='Copyright (c) 2024, Samuel Gomes'
 $VERSIONINFO:LegalTrademarks='All trademarks are property of their respective owners'
 $VERSIONINFO:OriginalFilename='ANSIPrint64.exe'
 $VERSIONINFO:ProductName='ANSI Print 64'
 $VERSIONINFO:Web='https://github.com/a740g'
 $VERSIONINFO:Comments='https://github.com/a740g'
-$VERSIONINFO:FILEVERSION#=1,3,7,0
-$VERSIONINFO:PRODUCTVERSION#=1,3,7,0
+$VERSIONINFO:FILEVERSION#=1,3,8,0
+$VERSIONINFO:PRODUCTVERSION#=1,3,8,0
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
@@ -69,17 +68,17 @@ DIM SHARED ANSICPS AS LONG ' rendering speed (0 = no delay; 1 = 1 char / sec, 36
 '-----------------------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '-----------------------------------------------------------------------------------------------------------------------
-CHDIR STARTDIR$ ' Change to the directory specifed by the environment
+CHDIR _STARTDIR$ ' Change to the directory specifed by the environment
 ANSICPS = ANSI_CPS_DEFAULT ' set default speed
 CanvasSize.x = CANVAS_WIDTH_DEFAULT ' set default width
 CanvasSize.y = CANVAS_HEIGHT_DEFAULT ' set default height
 CanvasFont = CANVAS_FONT_DEFAULT ' set default font
 SetupCanvas ' set the initial window size
-TITLE APP_NAME + " " + OS$ ' Set app title to the way it was
-ALLOWFULLSCREEN SQUAREPIXELS , SMOOTH ' Allow the program window to run fullscreen with Alt+Enter
-ACCEPTFILEDROP ' Enable drag and drop of files
+_TITLE APP_NAME + " " + _OS$ ' Set app title to the way it was
+_ALLOWFULLSCREEN _SQUAREPIXELS , _SMOOTH ' Allow the program window to run fullscreen with Alt+Enter
+_ACCEPTFILEDROP ' Enable drag and drop of files
 
-DIM event AS BYTE: event = EVENT_CMDS ' defaults to command line event on program entry
+DIM event AS _BYTE: event = EVENT_CMDS ' defaults to command line event on program entry
 
 ' Event loop
 DO
@@ -112,13 +111,13 @@ SUB SetupCanvas
     ' Free any old canvas
     IF Canvas < -1 THEN
         SCREEN 0
-        FREEIMAGE Canvas
+        _FREEIMAGE Canvas
         Canvas = 0
     END IF
 
-    Canvas = NEWIMAGE(8 * CanvasSize.x, CanvasFont * CanvasSize.y * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
+    Canvas = _NEWIMAGE(8 * CanvasSize.x, CanvasFont * CanvasSize.y * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
     SCREEN Canvas ' make the canvas the default screen
-    FONT CanvasFont ' set the current font
+    _FONT CanvasFont ' set the current font
     LOCATE , , FALSE ' turn cursor off
 END SUB
 
@@ -126,7 +125,7 @@ END SUB
 ' Welcome screen loop
 FUNCTION OnWelcomeScreen%%
     ' Allocate and setup the welcome screen
-    DIM AS LONG img: img = NEWIMAGE(80 * 8, 16 * 25, 32)
+    DIM AS LONG img: img = _NEWIMAGE(80 * 8, 16 * 25, 32)
     SCREEN img
 
     ' Load the ANSI art data
@@ -137,14 +136,14 @@ FUNCTION OnWelcomeScreen%%
     ANSI_Print buffer
 
     ' Get into a loop and check for input
-    DIM k AS LONG, e AS BYTE
+    DIM k AS LONG, e AS _BYTE
     DO
-        k = KEYHIT
+        k = _KEYHIT
 
         IF k = KEY_ESCAPE THEN
             e = EVENT_QUIT
 
-        ELSEIF TOTALDROPPEDFILES > 0 THEN
+        ELSEIF _TOTALDROPPEDFILES > 0 THEN
             e = EVENT_DROP
 
         ELSEIF k = KEY_F1 THEN
@@ -185,12 +184,12 @@ FUNCTION OnWelcomeScreen%%
         LOCATE 19, 57: PRINT USING "###"; CanvasSize.x
         LOCATE 21, 57: PRINT USING "#####"; ANSICPS
 
-        LIMIT UPDATES_PER_SECOND
+        _LIMIT UPDATES_PER_SECOND
     LOOP WHILE e = EVENT_NONE
 
     ' Free screen image
     SCREEN 0
-    FREEIMAGE img
+    _FREEIMAGE img
 
     OnWelcomeScreen = e
 
@@ -217,8 +216,8 @@ END FUNCTION
 FUNCTION DoFileDraw%% (fileName AS STRING)
     DoFileDraw = EVENT_DRAW ' default event is to draw next file
 
-    IF NOT FILEEXISTS(fileName) THEN
-        MESSAGEBOX APP_NAME, "Failed to load: " + fileName, "error"
+    IF NOT _FILEEXISTS(fileName) THEN
+        _MESSAGEBOX APP_NAME, "Failed to load: " + fileName, "error"
 
         EXIT FUNCTION
     END IF
@@ -238,7 +237,7 @@ FUNCTION DoFileDraw%% (fileName AS STRING)
     SetupCanvas
 
     ' Set the app title to display the file name
-    TITLE APP_NAME + " - " + GetFileNameFromPathOrURL(fileName)
+    _TITLE APP_NAME + " - " + Pathname_GetFileName(fileName)
 
     COLOR DarkGray, Black ' reset the foregound and background colors
     CLS ' this will reset the cursor to 1, 1
@@ -246,43 +245,43 @@ FUNCTION DoFileDraw%% (fileName AS STRING)
     ANSI_SetEmulationSpeed ANSICPS
     DIM dummy AS _BYTE: dummy = ANSI_PrintString(buffer) ' print and ignore return value
 
-    TITLE APP_NAME + " - [ESC to EXIT] - " + GetFileNameFromPathOrURL(fileName)
+    _TITLE APP_NAME + " - [ESC to EXIT] - " + Pathname_GetFileName(fileName)
 
     DIM AS LONG k
 
     DO
-        k = KEYHIT
+        k = _KEYHIT
 
-        IF TOTALDROPPEDFILES > 0 THEN
+        IF _TOTALDROPPEDFILES > 0 THEN
             DoFileDraw = EVENT_DROP
             EXIT DO
         ELSEIF k = 21248 THEN ' Shift + Delete - you known what it does
-            IF MESSAGEBOX(APP_NAME, "Are you sure you want to delete " + fileName + " permanently?", "yesno", "question", 0) = 1 THEN
+            IF _MESSAGEBOX(APP_NAME, "Are you sure you want to delete " + fileName + " permanently?", "yesno", "question", 0) = 1 THEN
                 KILL fileName
                 EXIT DO
             END IF
         END IF
 
-        LIMIT UPDATES_PER_SECOND
+        _LIMIT UPDATES_PER_SECOND
     LOOP UNTIL k = KEY_ESCAPE
 
-    TITLE APP_NAME + " " + OS$ ' Set app title to the way it was
+    _TITLE APP_NAME + " " + _OS$ ' Set app title to the way it was
 END FUNCTION
 
 
 ' Processes the command line one file at a time
 FUNCTION OnCommandLine%%
-    DIM e AS BYTE: e = EVENT_NONE
+    DIM e AS _BYTE: e = EVENT_NONE
 
     IF GetProgramArgumentIndex(KEY_QUESTION_MARK) > 0 THEN
-        MessageBox APP_NAME, APP_NAME + Chr$(KEY_ENTER) + _
-            "Syntax: ANSIPrintDemo [ansi_art.ans]" + Chr$(KEY_ENTER) + _
-            "  -w x: Text canvas width" + Chr$(KEY_ENTER) + _
-            "  -h x: Text canvas height" + Chr$(KEY_ENTER) + _
-            "  -f x: Font height" + Chr$(KEY_ENTER) + _
-            "  -s x: Characters / second" + Chr$(KEY_ENTER) + _
-            "    -?: Shows this message" + String$(2, KEY_ENTER) + _
-            "Copyright (c) 2023, Samuel Gomes" + String$(2, KEY_ENTER) + _
+        _MESSAGEBOX APP_NAME, APP_NAME + CHR$(KEY_ENTER) + _
+            "Syntax: ANSIPrintDemo [ansi_art.ans]" + CHR$(KEY_ENTER) + _
+            "  -w x: Text canvas width" + CHR$(KEY_ENTER) + _
+            "  -h x: Text canvas height" + CHR$(KEY_ENTER) + _
+            "  -f x: Font height" + CHR$(KEY_ENTER) + _
+            "  -s x: Characters / second" + CHR$(KEY_ENTER) + _
+            "    -?: Shows this message" + STRING$(2, KEY_ENTER) + _
+            "Copyright (c) 2024, Samuel Gomes" + STRING$(2, KEY_ENTER) + _
             "https://github.com/a740g/", "info"
 
         e = EVENT_QUIT
@@ -331,14 +330,14 @@ END FUNCTION
 ' Processes dropped files one file at a time
 FUNCTION OnDroppedFiles%%
     ' Make a copy of the dropped file and clear the list
-    REDIM fileNames(1 TO TOTALDROPPEDFILES) AS STRING
-    DIM i AS UNSIGNED LONG
-    DIM e AS BYTE: e = EVENT_NONE
+    REDIM fileNames(1 TO _TOTALDROPPEDFILES) AS STRING
+    DIM i AS _UNSIGNED LONG
+    DIM e AS _BYTE: e = EVENT_NONE
 
-    FOR i = 1 TO TOTALDROPPEDFILES
-        fileNames(i) = DROPPEDFILE(i)
+    FOR i = 1 TO _TOTALDROPPEDFILES
+        fileNames(i) = _DROPPEDFILE(i)
     NEXT
-    FINISHDROP ' This is critical
+    _FINISHDROP ' This is critical
 
     ' Now play the dropped file one at a time
     FOR i = LBOUND(fileNames) TO UBOUND(fileNames)
@@ -353,9 +352,9 @@ END FUNCTION
 ' Processes a list of files selected by the user
 FUNCTION OnSelectedFiles%%
     DIM ofdList AS STRING
-    DIM e AS BYTE: e = EVENT_NONE
+    DIM e AS _BYTE: e = EVENT_NONE
 
-    ofdList = OPENFILEDIALOG$(APP_NAME, , "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
+    ofdList = _OPENFILEDIALOG$(APP_NAME, , "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
     IF LEN(ofdList) = NULL THEN EXIT FUNCTION
 
     REDIM fileNames(0 TO 0) AS STRING
@@ -376,7 +375,7 @@ END FUNCTION
 ' MODULE FILES
 '-----------------------------------------------------------------------------------------------------------------------
 '$INCLUDE:'include/StringOps.bas'
-'$INCLUDE:'include/FileOps.bas'
+'$INCLUDE:'include/Pathname.bas'
 '$INCLUDE:'include/Base64.bas'
 '$INCLUDE:'include/ProgramArgs.bas'
 '$INCLUDE:'include/ANSIPrint.bas'

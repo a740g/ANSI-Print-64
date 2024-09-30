@@ -29,7 +29,7 @@ This is an [ANSI Escape Sequence](https://en.wikipedia.org/wiki/ANSI_escape_code
 - Open Terminal and change to the directory using an appropriate OS command
 - Run `git submodule update --init --recursive` to initialize, fetch and checkout git submodules
 - Open *ANSIPrint64.bas* in the QB64-PE IDE and press `F5` to compile and run
-- To use the library in your project add the [Toolbox64](https://github.com/a740g/Toolbox64) repositiory as a [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
+- To use the library in your project add the [Toolbox64](https://github.com/a740g/Toolbox64) repository as a [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
 
 ## API
 
@@ -57,7 +57,7 @@ What can I do with this?
 
 - Anything you want! Use it in games, demos or for writing pretty text mode user interfaces and output.
 
-Can you implment feature x / y?
+Can you implement feature x / y?
 
 - With the limited time I have between my day job, home and family, there is only so much I can do. I do maintain a list of TODO (see below). However, those do not have any set deadlines. If you need something implemented, submit a GitHub issue about it or do it yourself and submit a PR.
 
