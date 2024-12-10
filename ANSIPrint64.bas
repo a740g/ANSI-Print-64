@@ -28,8 +28,8 @@ $VERSIONINFO:OriginalFilename='ANSIPrint64.exe'
 $VERSIONINFO:ProductName='ANSI Print 64'
 $VERSIONINFO:Web='https://github.com/a740g'
 $VERSIONINFO:Comments='https://github.com/a740g'
-$VERSIONINFO:FILEVERSION#=1,3,8,0
-$VERSIONINFO:PRODUCTVERSION#=1,3,8,0
+$VERSIONINFO:FILEVERSION#=1,3,9,0
+$VERSIONINFO:PRODUCTVERSION#=1,3,9,0
 '-----------------------------------------------------------------------------------------------------------------------
 
 '-----------------------------------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ SUB SetupCanvas
     Canvas = _NEWIMAGE(8 * CanvasSize.x, CanvasFont * CanvasSize.y * (1 - (CanvasFont = 8)), 32) ' 8 is the built-in font width
     SCREEN Canvas ' make the canvas the default screen
     _FONT CanvasFont ' set the current font
-    LOCATE , , FALSE ' turn cursor off
+    LOCATE , , _FALSE ' turn cursor off
 END SUB
 
 
@@ -140,31 +140,31 @@ FUNCTION OnWelcomeScreen%%
     DO
         k = _KEYHIT
 
-        IF k = KEY_ESCAPE THEN
+        IF k = _KEY_ESC THEN
             e = EVENT_QUIT
 
         ELSEIF _TOTALDROPPEDFILES > 0 THEN
             e = EVENT_DROP
 
-        ELSEIF k = KEY_F1 THEN
+        ELSEIF k = _KEY_F1 THEN
             e = EVENT_LOAD
 
         ELSEIF k = KEY_UPPER_F OR k = KEY_LOWER_F THEN
             CanvasFont = 24 - CanvasFont ' toggle between 16 and 8
 
-        ELSEIF k = KEY_UP_ARROW THEN
+        ELSEIF k = _KEY_UP THEN
             CanvasSize.y = CanvasSize.y + 1
             IF CanvasSize.y > CANVAS_HEIGHT_MAX THEN CanvasSize.y = CANVAS_HEIGHT_MAX
 
-        ELSEIF k = KEY_DOWN_ARROW THEN
+        ELSEIF k = _KEY_DOWN THEN
             CanvasSize.y = CanvasSize.y - 1
             IF CanvasSize.y < CANVAS_HEIGHT_MIN THEN CanvasSize.y = CANVAS_HEIGHT_MIN
 
-        ELSEIF k = KEY_LEFT_ARROW THEN
+        ELSEIF k = _KEY_LEFT THEN
             CanvasSize.x = CanvasSize.x - 1
             IF CanvasSize.x < CANVAS_WIDTH_MIN THEN CanvasSize.x = CANVAS_WIDTH_MIN
 
-        ELSEIF k = KEY_RIGHT_ARROW THEN
+        ELSEIF k = _KEY_RIGHT THEN
             CanvasSize.x = CanvasSize.x + 1
             IF CanvasSize.x > CANVAS_WIDTH_MAX THEN CanvasSize.x = CANVAS_WIDTH_MAX
 
@@ -263,7 +263,7 @@ FUNCTION DoFileDraw%% (fileName AS STRING)
         END IF
 
         _LIMIT UPDATES_PER_SECOND
-    LOOP UNTIL k = KEY_ESCAPE
+    LOOP UNTIL k = _KEY_ESC
 
     _TITLE APP_NAME + " " + _OS$ ' Set app title to the way it was
 END FUNCTION
@@ -274,14 +274,14 @@ FUNCTION OnCommandLine%%
     DIM e AS _BYTE: e = EVENT_NONE
 
     IF GetProgramArgumentIndex(KEY_QUESTION_MARK) > 0 THEN
-        _MESSAGEBOX APP_NAME, APP_NAME + CHR$(KEY_ENTER) + _
-            "Syntax: ANSIPrintDemo [ansi_art.ans]" + CHR$(KEY_ENTER) + _
-            "  -w x: Text canvas width" + CHR$(KEY_ENTER) + _
-            "  -h x: Text canvas height" + CHR$(KEY_ENTER) + _
-            "  -f x: Font height" + CHR$(KEY_ENTER) + _
-            "  -s x: Characters / second" + CHR$(KEY_ENTER) + _
-            "    -?: Shows this message" + STRING$(2, KEY_ENTER) + _
-            "Copyright (c) 2024, Samuel Gomes" + STRING$(2, KEY_ENTER) + _
+        _MESSAGEBOX APP_NAME, APP_NAME + CHR$(_KEY_ENTER) + _
+            "Syntax: ANSIPrintDemo [ansi_art.ans]" + CHR$(_KEY_ENTER) + _
+            "  -w x: Text canvas width" + CHR$(_KEY_ENTER) + _
+            "  -h x: Text canvas height" + CHR$(_KEY_ENTER) + _
+            "  -f x: Font height" + CHR$(_KEY_ENTER) + _
+            "  -s x: Characters / second" + CHR$(_KEY_ENTER) + _
+            "    -?: Shows this message" + STRING$(2, _KEY_ENTER) + _
+            "Copyright (c) 2024, Samuel Gomes" + STRING$(2, _KEY_ENTER) + _
             "https://github.com/a740g/", "info"
 
         e = EVENT_QUIT
@@ -354,13 +354,13 @@ FUNCTION OnSelectedFiles%%
     DIM ofdList AS STRING
     DIM e AS _BYTE: e = EVENT_NONE
 
-    ofdList = _OPENFILEDIALOG$(APP_NAME, , "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", TRUE)
+    ofdList = _OPENFILEDIALOG$(APP_NAME, , "*.ans|*.ANS|*.asc|*.ASC|*.diz|*.DIZ|*.nfo|*.NFO|*.txt|*.TXT", "ANSI Art Files", _TRUE)
     IF LEN(ofdList) = NULL THEN EXIT FUNCTION
 
     REDIM fileNames(0 TO 0) AS STRING
     DIM AS LONG i, j
 
-    j = String_Tokenize(ofdList, "|", STRING_EMPTY, FALSE, fileNames())
+    j = String_Tokenize(ofdList, "|", _STR_EMPTY, _FALSE, fileNames())
 
     FOR i = 0 TO j - 1
         e = DoFileDraw(fileNames(i))
